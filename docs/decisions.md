@@ -300,3 +300,26 @@ UTF-8 or JSON uses 400. Unexpected errors use a generic 500 response.
 ## Production dependency audit
 
 The Phase 10 production dependency audit reported zero vulnerabilities.
+
+## Render and Neon deployment
+
+Render Free provides a build command and a start command. Run committed
+migrations during the build because pre-deploy commands require a paid
+web service. Migration failure prevents rollout. Builds operate on the
+same database the currently deployed service may still use, so migrations
+must be compatible with that running version. Use one Node instance in
+the same geography as Neon.
+
+Use Neon's pooled URL at runtime and its direct URL for migration deploy.
+The runtime pg pool defaults to five connections, 30 seconds idle, and
+15 seconds to connect. The small pool bounds per-process connections,
+while the connection timeout allows compute wake-up and TLS setup.
+Interactive transactions give acquisition up to 20 seconds and execution
+up to 15 seconds to cover connection acquisition and short board-lock
+contention. All `FOR UPDATE` queries and writes use the same
+transaction-bound client. Transaction pooling pins the backend until
+commit or rollback, when Postgres releases the locks.
+
+On SIGTERM the app ends open SSE responses and releases admission slots.
+Next.js handles HTTP shutdown and process exit. A reconnect fetches the
+latest board snapshot.
