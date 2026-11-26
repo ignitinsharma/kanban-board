@@ -15,7 +15,7 @@ export function boardDetailQuery(boardId: string) {
     async queryFn({ signal }): Promise<BoardDetail> {
       const response = await fetch(
         `/api/boards/${encodeURIComponent(boardId)}`,
-        { signal, cache: "no-store" },
+        { signal, cache: "no-store", credentials: "same-origin" },
       );
       if (!response.ok) throw new BoardRequestError(response.status);
       return response.json();

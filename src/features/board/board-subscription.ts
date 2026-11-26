@@ -1,6 +1,6 @@
 import type { QueryClient } from "@tanstack/react-query";
 import { applyBoardEvent } from "@/shared/apply-board-event";
-import type { BoardDetail } from "@/shared/board";
+import type { Board, BoardDetail } from "@/shared/board";
 import { boardEventTypes, parseBoardEvent } from "@/shared/board-event-schema";
 import type { BoardEvent } from "@/shared/events";
 import {
@@ -9,20 +9,31 @@ import {
   BoardRequestError,
 } from "./board-query";
 
-export type ConnectionState = "connecting" | "open" | "closed";
+export type ConnectionState =
+  | "connecting"
+  | "open"
+  | "reconnecting"
+  | "unauthenticated"
+  | "removed"
+  | "closed";
 
 export function subscribeToBoard(
   query: QueryClient,
   boardId: string,
   onState: (state: ConnectionState) => void,
   openSource = (url: string) => new EventSource(url),
+  onUnauthorized?: () => void,
 ) {
   const options = boardDetailQuery(boardId);
   const filters = { queryKey: options.queryKey, exact: true };
   const url = `/api/boards/${encodeURIComponent(boardId)}/events`;
   const deleted = new Set<string>();
   const patches: BoardEvent[] = [];
-  let source: EventSource;
+  let source: EventSource | undefined;
+  let retryTimer: ReturnType<typeof setTimeout> | undefined;
+  let probing = false;
+  let backoffStep = 0;
+  let reopened = false;
   let stopped = false;
   let busy = false;
   let refresh = false;
@@ -34,22 +45,75 @@ export function subscribeToBoard(
     stopped = true;
     closeSource();
     patches.length = 0;
-    if (busy) void query.cancelQueries(filters, { revert: false });
+    clearTimeout(retryTimer);
+    if (busy || probing) void query.cancelQueries(filters, { revert: false });
   }
 
   function closeSource() {
     generation += 1;
-    source.onopen = source.onerror = null;
+    const current = source;
+    source = undefined;
+    if (!current) return;
+    current.onopen = current.onerror = null;
     for (const type of boardEventTypes)
-      source.removeEventListener(type, receive);
-    source.close();
+      current.removeEventListener(type, receive);
+    current.close();
   }
 
-  function removeBoard() {
+  function terminate(state: "removed" | "unauthenticated" | "closed") {
     stop();
-    query.removeQueries(filters);
-    void query.invalidateQueries({ queryKey: boardListKey, exact: true });
-    onState("closed");
+    if (state !== "closed") query.removeQueries(filters);
+    if (state === "removed") {
+      query.setQueryData<Board[]>(boardListKey, (boards) =>
+        boards?.filter(({ id }) => id !== boardId),
+      );
+      void query.invalidateQueries({ queryKey: boardListKey, exact: true });
+    }
+    onState(state);
+    if (state === "unauthenticated") onUnauthorized?.();
+  }
+
+  function handleAccessError(error: unknown) {
+    if (!(error instanceof BoardRequestError)) return false;
+    if (error.status === 401) terminate("unauthenticated");
+    else if (error.status === 404) terminate("removed");
+    else return false;
+    return true;
+  }
+
+  function scheduleProbe() {
+    const base = Math.min(30_000, 1000 * 2 ** backoffStep);
+    backoffStep = Math.min(backoffStep + 1, 5);
+    const delay = Math.round(base * (0.8 + Math.random() * 0.2));
+    retryTimer = setTimeout(() => {
+      retryTimer = undefined;
+      void probe();
+    }, delay);
+  }
+
+  async function probe() {
+    if (stopped) return;
+    const epoch = generation;
+    probing = true;
+    try {
+      await query.cancelQueries(filters, { revert: false });
+      if (stopped || epoch !== generation) return;
+      await query.fetchQuery({ ...options, staleTime: 0, retry: false });
+      if (stopped || epoch !== generation) return;
+      reopened = true;
+      connect(true);
+    } catch (error) {
+      if (stopped || epoch !== generation || handleAccessError(error)) return;
+      if (
+        !(error instanceof BoardRequestError) ||
+        error.status === 429 ||
+        error.status >= 500
+      )
+        scheduleProbe();
+      else terminate("closed");
+    } finally {
+      probing = false;
+    }
   }
 
   function reconcile() {
@@ -74,11 +138,7 @@ export function subscribeToBoard(
             await query.fetchQuery({ ...options, staleTime: 0, retry: false });
           } catch (error) {
             if (stopped || epoch !== generation) continue;
-            if (
-              error instanceof BoardRequestError &&
-              [401, 404].includes(error.status)
-            )
-              removeBoard();
+            handleAccessError(error);
           } finally {
             busy = false;
           }
@@ -119,7 +179,7 @@ export function subscribeToBoard(
       return;
     }
     if (event.type === "board.deleted" && event.entity.id === boardId) {
-      removeBoard();
+      terminate("removed");
       return;
     }
     const key = `${event.type.split(".")[0]}:${event.entity.id}`;
@@ -144,22 +204,29 @@ export function subscribeToBoard(
     void pump();
   }
 
-  function connect() {
-    onState("connecting");
+  function connect(reconnecting = false) {
+    onState(reconnecting ? "reconnecting" : "connecting");
     const current = openSource(url);
     source = current;
     for (const type of boardEventTypes) current.addEventListener(type, receive);
     current.onopen = () => {
       if (stopped || source !== current) return;
+      backoffStep = 0;
+      reopened = false;
       onState("open");
       reconcile();
     };
     current.onerror = () => {
       if (stopped || source !== current) return;
       if (current.readyState === 2) {
-        onState("closed");
-        reconcile();
-      } else onState("connecting");
+        closeSource();
+        if (busy) void query.cancelQueries(filters, { revert: false });
+        refresh = false;
+        patches.length = 0;
+        onState("reconnecting");
+        if (reopened) scheduleProbe();
+        else void probe();
+      } else onState("reconnecting");
     };
   }
 
