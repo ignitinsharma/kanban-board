@@ -16,6 +16,7 @@ import { EmptyState } from "@/components/empty-state";
 import { Skeleton } from "@/components/skeleton";
 import type { Card } from "@/shared/board";
 import { ApiError, getClientId } from "@/lib/api-client";
+import { ActivityPanel } from "./activity-panel";
 import { useBoard } from "./board-hooks";
 import { CardDetailDialog } from "./card-detail-dialog";
 import { DragBoard } from "./drag-board";
@@ -81,6 +82,12 @@ export function BoardView({
   const [retry, setRetry] = useState(0);
   const [selected, openCard] = useState<string>();
   const [membersOpen, setMembersOpen] = useState(false);
+  const [activityOpen, setActivityOpen] = useState(false);
+  const activityButton = useRef<HTMLButtonElement>(null);
+  const closeActivity = useCallback(() => {
+    setActivityOpen(false);
+    activityButton.current?.focus();
+  }, []);
   const showCard = useCallback((id: string) => openCard(id), []);
   const closeCard = useCallback(() => openCard(undefined), []);
   const closeMembers = useCallback(() => setMembersOpen(false), []);
@@ -97,7 +104,10 @@ export function BoardView({
   }, [removed, status, router]);
 
   return (
-    <main className={styles.page}>
+    <main
+      className={styles.page}
+      data-activity-open={activityOpen && !removed ? "" : undefined}
+    >
       <header className={styles.heading}>
         <div>
           <Link className={styles.back} href="/boards">
@@ -108,7 +118,18 @@ export function BoardView({
         <div className={styles.headerActions}>
           <ConnectionIndicator state={state} />
           {board.data && (
-            <Button onClick={() => setMembersOpen(true)}>Members</Button>
+            <>
+              <Button onClick={() => setMembersOpen(true)}>Members</Button>
+              <Button
+                ref={activityButton}
+                aria-expanded={activityOpen}
+                onClick={() =>
+                  activityOpen ? closeActivity() : setActivityOpen(true)
+                }
+              >
+                Activity
+              </Button>
+            </>
           )}
         </div>
       </header>
@@ -170,6 +191,9 @@ export function BoardView({
             onCardCreated={onCardCreated}
           />
         )
+      )}
+      {activityOpen && !removed && (
+        <ActivityPanel boardId={boardId} onClose={closeActivity} />
       )}
       {selected && (
         <CardDetailDialog
