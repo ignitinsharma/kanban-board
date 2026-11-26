@@ -2,127 +2,18 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { memo, useCallback, useEffect, useMemo, useState } from "react";
-import { Avatar } from "@/components/avatar";
-import { Badge } from "@/components/badge";
+import { useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/button";
 import { ConnectionIndicator } from "@/components/connection-indicator";
 import { EmptyState } from "@/components/empty-state";
 import { Skeleton } from "@/components/skeleton";
 import { ApiError, getClientId } from "@/lib/api-client";
-import type { BoardDetail, Card } from "@/shared/board";
 import { useBoard } from "./board-hooks";
 import { CardDetailDialog } from "./card-detail-dialog";
-import { AddCard, AddColumn, ColumnHeader } from "./column-management";
+import { DragBoard } from "./drag-board";
 import { MembersDialog } from "./members-dialog";
-import { groupCardsByColumn } from "./group-cards";
 import { useBoardEvents } from "./use-board-events";
 import styles from "./board-view.module.css";
-
-const emptyCards: readonly Card[] = [];
-
-const CardTile = memo(function CardTile({
-  id,
-  title,
-  priority,
-  assignee,
-  onOpen,
-}: {
-  id: string;
-  title: string;
-  priority: Card["priority"];
-  assignee?: string;
-  onOpen: (id: string) => void;
-}) {
-  return (
-    <li>
-      <button type="button" className={styles.card} onClick={() => onOpen(id)}>
-        <span className={styles.cardTitle}>{title}</span>
-        <span className={styles.cardMeta}>
-          <Badge priority={priority} />
-          {assignee && <Avatar name={assignee} />}
-        </span>
-      </button>
-    </li>
-  );
-});
-
-const BoardColumns = memo(function BoardColumns({
-  detail,
-  actorId,
-  onOpen,
-}: {
-  detail: BoardDetail;
-  actorId: string;
-  onOpen: (id: string) => void;
-}) {
-  const grouped = useMemo(
-    () => groupCardsByColumn(detail.cards),
-    [detail.cards],
-  );
-  const members = useMemo(
-    () => new Map(detail.members.map(({ id, name }) => [id, name])),
-    [detail.members],
-  );
-  return (
-    <div
-      className={styles.columns}
-      tabIndex={0}
-      role="region"
-      aria-label="Board columns"
-    >
-      {detail.columns.map((column) => {
-        const cards = grouped.get(column.id) ?? emptyCards;
-        return (
-          <section
-            className={styles.column}
-            key={column.id}
-            aria-labelledby={`column-${column.id}`}
-          >
-            <ColumnHeader
-              boardId={detail.id}
-              actorId={actorId}
-              column={column}
-              count={cards.length}
-            />
-            <ul
-              className={styles.cards}
-              tabIndex={0}
-              aria-label={`Cards in ${column.name}`}
-            >
-              {cards.length ? (
-                cards.map((card) => (
-                  <CardTile
-                    key={card.id}
-                    id={card.id}
-                    onOpen={onOpen}
-                    title={card.title}
-                    priority={card.priority}
-                    assignee={
-                      card.assigneeId ? members.get(card.assigneeId) : undefined
-                    }
-                  />
-                ))
-              ) : (
-                <li className={styles.emptyColumn}>No cards</li>
-              )}
-            </ul>
-            <AddCard
-              boardId={detail.id}
-              actorId={actorId}
-              columnId={column.id}
-            />
-          </section>
-        );
-      })}
-      <AddColumn
-        boardId={detail.id}
-        actorId={actorId}
-        atLimit={detail.columns.length >= 12}
-      />
-    </div>
-  );
-});
 
 export function BoardView({
   boardId,
@@ -205,11 +96,7 @@ export function BoardView({
         </div>
       ) : (
         board.data && (
-          <BoardColumns
-            detail={board.data}
-            actorId={actorId}
-            onOpen={showCard}
-          />
+          <DragBoard detail={board.data} actorId={actorId} onOpen={showCard} />
         )
       )}
       {selected && (

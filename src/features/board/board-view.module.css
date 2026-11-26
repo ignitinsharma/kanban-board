@@ -119,3 +119,80 @@
   margin-inline: auto;
   padding: var(--space-6);
 }
+
+.cardItem {
+  position: relative;
+  border-radius: var(--radius);
+}
+.cardItem .card {
+  padding-right: calc(var(--control-height) + var(--space-2));
+}
+.cardItem[aria-busy="true"] {
+  opacity: 0.65;
+}
+.cardItem[data-placeholder="true"] {
+  outline: 1px dashed var(--color-control-border);
+  outline-offset: -1px;
+}
+.cardItem[data-placeholder="true"] .card,
+.cardItem[data-placeholder="true"] .grip {
+  opacity: 0;
+}
+.grip {
+  position: absolute;
+  top: var(--space-1);
+  right: var(--space-1);
+  display: grid;
+  place-items: center;
+  width: var(--control-height);
+  height: var(--control-height);
+  border: 0;
+  border-radius: var(--radius-small);
+  background: transparent;
+  color: var(--color-text-muted);
+  cursor: grab;
+}
+.grip:hover {
+  background: var(--color-subtle);
+  color: var(--color-text);
+}
+.grip:disabled {
+  cursor: default;
+}
+.card,
+.grip {
+  touch-action: pan-y;
+}
+.overlay {
+  cursor: grabbing;
+  pointer-events: none;
+  box-shadow: 0 2px 8px #18223024;
+}
+.cards {
+  min-height: 48px;
+}
+.cards[data-drop-over="true"] {
+  outline: 1px dashed var(--color-control-border);
+  outline-offset: -1px;
+}
+.moveNotice {
+  flex: none;
+  padding: var(--space-2) var(--space-6) 0;
+}
+.cards {
+  position: relative;
+}
+.cardItem[data-drag-anchor="true"] {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 0;
+  margin: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+.touchPlaceholder {
+  border: 1px dashed var(--color-control-border);
+  border-radius: var(--radius);
+}
