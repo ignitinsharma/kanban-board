@@ -62,7 +62,7 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
       <section className={styles.panel} aria-labelledby="auth-title">
         <div className={styles.brand}>Kanban</div>
         <h1 id="auth-title">{label}</h1>
-        <form className={styles.form} onSubmit={submit}>
+        <form method="post" className={styles.form} onSubmit={submit}>
           {registering && (
             <FormField id="auth-name" label="Name" error={issues.name}>
               {(props) => (
