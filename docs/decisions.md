@@ -185,3 +185,18 @@ The shared browser API client lazily creates one UUID per document
 in module memory and sends it as `X-Client-Id` on mutations. The same
 identity is available to the board subscription. Reloading starts
 a new identity. The ID provides correlation and grants no access.
+
+## ADR 016 · Board mutation results and card drafts
+
+Mutation results go through the SSE reducer. After a successful API
+operation, synthesize the equivalent board event from the response,
+cancel in-flight detail queries, and apply the reducer to the current
+cache. Refetch if the reducer cannot reconcile the event. This gives
+the mutation response and its SSE echo the same idempotency and
+ordering rules.
+
+Dialog saves send only changed fields, measured against the normalized
+values when the card opened. This preserves concurrent changes to fields
+the user did not edit. A no-op save sends no request. A deleted card
+cannot be saved, and a card deletion that returns 404 is applied locally
+as a deletion.

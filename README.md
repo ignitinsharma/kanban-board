@@ -149,8 +149,10 @@ stream cap would require shared accounting.
 
 ## UI
 
-The authenticated shell links to a board list and a read-only live
-board. The list supports creating, renaming, and deleting boards.
+The authenticated shell links to a board list and a live board.
+The list supports creating, renaming, and deleting boards. On a board,
+members can create, edit, assign, and delete cards, create, rename,
+and delete empty columns, and view or add members by email.
 The board groups cards by column and updates from the SSE stream.
 
 Reusable visual controls live in `src/components`. Feature UI and
