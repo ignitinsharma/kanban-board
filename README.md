@@ -120,8 +120,15 @@ and 100 per Node process. At capacity, the endpoint returns 429 with
 `Retry-After: 10`.
 
 The stream sends typed board events and a comment every 15 seconds.
-The client fetches the latest board detail on each connection. The
-stream expires with the session and rotates after 55 minutes.
+The client fetches the latest board detail on each connection.
+A snapshot recovers the current state without retaining a replay buffer
+or relying on Last-Event-ID across process restarts. If the native stream
+closes permanently, the client probes the board endpoint. A 200 reopens
+the stream, a 401 requests sign-in, and a 404 clears the board cache.
+Transient failures and repeated stream rejections retry with jittered
+exponential backoff from a one-second base up to 30 seconds.
+
+The stream expires with the session and rotates after 55 minutes.
 Membership is rechecked before event delivery and during idle streams.
 The external `/api/health` pinger remains necessary on Render Free for an
 always-warm demo because outbound heartbeats do not count as inbound traffic.
@@ -131,8 +138,11 @@ the endpoint with `curl -N` and a throwaway user's session cookie. Pass the
 cookie through local curl configuration and keep it out of terminal
 output. Confirm an immediate connection comment, two distinct heartbeat
 frames, and a named event after a mutation. Repeat with `--compressed`
-and on Render to verify that ingress delivers frames incrementally.
+locally and after deployment on Render. Only the deployed check can
+verify Render ingress delivers frames incrementally.
 
 Board event delivery and stream limits are local to one Node process.
 Scaling out requires a shared EventBus implementation such as Redis
-pub/sub or PostgreSQL LISTEN/NOTIFY and shared accounting for a global cap.
+pub/sub or PostgreSQL LISTEN/NOTIFY to fan events out to each process.
+PostgreSQL would use a dedicated direct listener connection. A global
+stream cap would require shared accounting.

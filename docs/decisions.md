@@ -117,7 +117,10 @@ destination, excluding the moving item. After taking the board lock,
 it reloads the destination. If an overlapping mutation inserted items
 between the same unchanged anchors, the move inserts immediately
 before the original right anchor or appends when that anchor is
-open-ended. Missing or changed anchors and an initially stale gap
+open-ended. When two users drop cards into the same valid gap at
+the same time, the second committed card lands immediately behind
+the first. This deliberately shifts the second drop by one place so
+both moves can succeed. Missing or changed anchors and an initially stale gap
 return `409 STALE_ORDER`. Unique position conflicts are retried up
 to three times with fresh reads.
 
@@ -130,24 +133,35 @@ authorization information. The bus is in memory and scoped by board.
 
 ## ADR 014 · Board event streams and reconnect recovery
 
-A dynamic Node Route Handler streams board-scoped events with SSE.
+A dynamic Node Route Handler at `GET /api/boards/[boardId]/events`
+streams board-scoped events with SSE.
 Cookie authentication and board membership gate admission. Every
 protected frame checks membership before delivery. An idle recheck
 runs every 60 seconds. The deletion signal contains only the board
 ID and terminates the subscription. Abort, cancellation, expiry,
 rotation, and slow consumers release the admission slot.
 
-Allow three concurrent streams per user and 100 per instance. Bound
+Allow three concurrent streams per user and 100 per Node process.
+At capacity, return 429 with `Retry-After: 10`. Bound
 pending frames and the response buffer, and close slow consumers so
 they can recover via a snapshot. Send heartbeat comments every 15
 seconds to keep intermediaries active. Keep the external health
 pinger for Render Free. Rotate streams after 55 minutes or at session
 expiry, whichever comes first.
 
-Refresh the board snapshot on each successful connection. A replay
+Refresh the board snapshot on each successful connection. A Last-Event-ID replay
 buffer would require gap detection and still need snapshot recovery
 after a restart. The client applies ordered DTO updates to the detail
 cache and coalesces reconciliation fetches when state is uncertain.
+On a terminal stream error, probe the board snapshot. A 200 reopens
+the stream. A 401 stops recovery and notifies the UI to request sign-in.
+A 404 stops recovery and removes the board from the cache. Network
+errors, 429, and 5xx responses retry with jittered exponential backoff
+from a one-second base, capped at 30 seconds. Repeated stream
+rejections also back off even when the snapshot remains readable.
+A successful stream open resets the backoff. Verify Render ingress
+buffering after deployment.
+
 The bus is shared across route bundles within one process. Multiple
 instances would need shared pub/sub and deployment-wide accounting if
 the connection cap must apply across instances. PostgreSQL
