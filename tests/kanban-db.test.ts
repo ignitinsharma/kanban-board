@@ -1,3 +1,4 @@
+/// <reference types="vite/client" />
 import { randomUUID } from "node:crypto";
 import { PrismaPg } from "@prisma/adapter-pg";
 import {
@@ -11,6 +12,7 @@ import {
 } from "vitest";
 import { PrismaClient } from "../prisma/generated/client";
 import * as boards from "../src/app/api/boards/route";
+import * as activity from "../src/app/api/boards/[boardId]/activity/route";
 import * as board from "../src/app/api/boards/[boardId]/route";
 import * as members from "../src/app/api/boards/[boardId]/members/route";
 import * as columns from "../src/app/api/boards/[boardId]/columns/route";
@@ -21,6 +23,7 @@ import * as card from "../src/app/api/cards/[cardId]/route";
 import * as cardMove from "../src/app/api/cards/[cardId]/move/route";
 import { POST as register } from "../src/app/api/auth/register/route";
 import { sessionCookieName } from "../src/server/security/session-cookie";
+import { MemoryRateLimiter } from "../src/server/security/rate-limit";
 import { signSession } from "../src/server/security/session";
 import { boardEvents } from "../src/server/realtime/event-bus";
 import { runInTransaction } from "../src/server/repositories/transaction";
@@ -509,14 +512,12 @@ describe.skipIf(!connectionString)("Kanban API with PostgreSQL", () => {
         data: { boardId: project.id, name: position, position },
       });
       await db.card.createMany({
-        data: [...keys]
-          .reverse()
-          .map((key) => ({
-            boardId: project.id,
-            columnId: created.id,
-            position: key,
-            title: key,
-          })),
+        data: [...keys].reverse().map((key) => ({
+          boardId: project.id,
+          columnId: created.id,
+          position: key,
+          title: key,
+        })),
       });
     }
     const visible = await json<BoardDetail>(
@@ -562,6 +563,249 @@ describe.skipIf(!connectionString)("Kanban API with PostgreSQL", () => {
     }
   });
 
+  it("pages activity with identical timestamps and retains deleted snapshots", async () => {
+    const owner = await user("Owner");
+    const outsider = await user("Outsider");
+    const project = await createBoard(owner.cookie);
+    const context = params("boardId", project.id);
+    const addColumn = await json<Column>(
+      await columns.POST(
+        request("POST", owner.cookie, { name: "Temporary" }),
+        context,
+      ),
+      201,
+    );
+    const issue = await createCard(owner.cookie, addColumn.id, "Snapshot");
+    expect(
+      (
+        await card.PATCH(
+          request("PATCH", owner.cookie, { title: "Renamed" }),
+          params("cardId", issue.id),
+        )
+      ).status,
+    ).toBe(200);
+    expect(
+      (
+        await card.DELETE(
+          request("DELETE", owner.cookie),
+          params("cardId", issue.id),
+        )
+      ).status,
+    ).toBe(204);
+    expect(
+      (
+        await column.DELETE(
+          request("DELETE", owner.cookie),
+          params("columnId", addColumn.id),
+        )
+      ).status,
+    ).toBe(204);
+    const actions = await db.activityLog.findMany({
+      where: { boardId: project.id },
+      orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+    });
+    expect(actions.map(({ action }) => action).sort()).toEqual([
+      "CARD_CREATED",
+      "CARD_DELETED",
+      "CARD_UPDATED",
+      "COLUMN_CREATED",
+      "COLUMN_DELETED",
+    ]);
+    await db.activityLog.updateMany({
+      where: { boardId: project.id },
+      data: { createdAt: new Date("2024-01-01T00:00:00Z") },
+    });
+    const read = (query: string, cookie = owner.cookie) =>
+      activity.GET(
+        new Request(base + "/activity" + query, {
+          headers: { Cookie: cookie },
+        }),
+        context,
+      );
+    expect((await read("", outsider.cookie)).status).toBe(404);
+    for (const query of ["?limit=0", "?limit=51", "?cursor=e30"])
+      expect((await read(query)).status).toBe(400);
+    const rows = [];
+    let cursor: string | null = null;
+    for (let i = 0; i < 3; i++) {
+      const response = await read(
+        `?limit=2${cursor ? `&cursor=${cursor}` : ""}`,
+      );
+      expect(response.headers.get("cache-control")).toBe("no-store");
+      const page: import("../src/shared/activity").ActivityPage = await json(
+        response,
+        200,
+      );
+      rows.push(...page.items);
+      cursor = page.nextCursor;
+    }
+    expect(cursor).toBeNull();
+    expect(rows.map(({ id }) => id)).toEqual(
+      actions
+        .map(({ id }) => id)
+        .sort()
+        .reverse(),
+    );
+    expect(
+      rows.every(
+        ({ actor }) => Object.keys(actor).sort().join(",") === "id,name",
+      ),
+    ).toBe(true);
+    expect(rows.find(({ action }) => action === "CARD_DELETED")).toMatchObject({
+      cardId: null,
+      metadata: { title: "Renamed", columnName: "Temporary" },
+    });
+    expect(
+      rows.find(({ action }) => action === "COLUMN_DELETED"),
+    ).toMatchObject({ columnId: null, metadata: { columnName: "Temporary" } });
+  });
+
+  it("covers every protected route with its quota or stream admission and validates UUID params", async () => {
+    const owner = await user("Owner");
+    const routes = import.meta.glob<
+      Record<
+        string,
+        (
+          request: Request,
+          context: { params: Promise<Record<string, string>> },
+        ) => Promise<Response>
+      >
+    >("../src/app/api/**/route.ts");
+    const publicHandlers = new Set([
+      "GET /health",
+      "POST /auth/login",
+      "POST /auth/logout",
+      "POST /auth/register",
+    ]);
+    const quota = vi.spyOn(MemoryRateLimiter.prototype, "consume");
+    try {
+      for (const [file, load] of Object.entries(routes)) {
+        const path = file
+          .replace("../src/app/api", "")
+          .replace("/route.ts", "");
+        for (const [method, handler] of Object.entries(await load())) {
+          if (
+            typeof handler !== "function" ||
+            !/^(GET|HEAD|POST|PATCH|PUT|DELETE)$/.test(method) ||
+            publicHandlers.has(`${method} ${path}`)
+          )
+            continue;
+          const dynamic = /\[([^\]]+)\]/.exec(path)?.[1];
+          const context = {
+            params: Promise.resolve(
+              dynamic ? { [dynamic]: "invalid-uuid" } : {},
+            ),
+          };
+          const stream = path.endsWith("/events");
+          quota.mockClear();
+          quota.mockReturnValue(17);
+          const response = await handler(
+            request(method, owner.cookie),
+            context,
+          );
+          expect(response.status, `${method} ${path}`).toBe(stream ? 400 : 429);
+          if (stream) expect(quota).not.toHaveBeenCalled();
+          else {
+            expect(response.headers.get("retry-after")).toBe("17");
+            expect(quota).toHaveBeenCalledWith(
+              `${method === "GET" || method === "HEAD" ? "read" : "write"}:${owner.id}`,
+              method === "GET" || method === "HEAD" ? 600 : 120,
+              60_000,
+            );
+          }
+          if (dynamic && !stream) {
+            quota.mockReturnValue(0);
+            expect(
+              (await handler(request(method, owner.cookie), context)).status,
+              `UUID validation for ${method} ${path}`,
+            ).toBe(400);
+          }
+        }
+      }
+    } finally {
+      quota.mockRestore();
+    }
+  });
+
+  it("enforces mutation rate limits per authenticated user", async () => {
+    const owner = await user("Owner");
+    const other = await user("Other");
+    const project = await createBoard(owner.cookie);
+    const context = params("boardId", project.id);
+    for (let i = 0; i < 119; i++)
+      expect(
+        (
+          await board.PATCH(
+            request("PATCH", owner.cookie, { name: project.name }),
+            context,
+          )
+        ).status,
+      ).toBe(200);
+    const blocked = await board.PATCH(
+      request("PATCH", owner.cookie, { name: project.name }),
+      context,
+    );
+    expect(await json(blocked, 429)).toEqual({
+      error: { code: "RATE_LIMITED", message: "Too many requests" },
+    });
+    expect(Number(blocked.headers.get("retry-after"))).toBeGreaterThan(0);
+    expect(
+      (await board.GET(request("GET", owner.cookie), context)).status,
+    ).toBe(200);
+    expect(
+      (await boards.POST(request("POST", other.cookie, { name: "Other" })))
+        .status,
+    ).toBe(201);
+  });
+
+  it("enforces column, card and member caps through the API", async () => {
+    const owner = await user("Owner");
+    const project = await createBoard(owner.cookie);
+    const context = params("boardId", project.id);
+    const target = project.columns[0];
+    const extra = await user("Extra");
+    await db.column.createMany({
+      data: Array.from({ length: 8 }, (_, i) => ({
+        boardId: project.id,
+        name: "Extra",
+        position: `test-${i}`,
+      })),
+    });
+    await db.card.createMany({
+      data: Array.from({ length: 500 }, (_, i) => ({
+        boardId: project.id,
+        columnId: target.id,
+        title: "Fixture",
+        position: `test-${i}`,
+      })),
+    });
+    const users = await Promise.all(
+      Array.from({ length: 19 }, () => user("Member")),
+    );
+    await db.boardMember.createMany({
+      data: users.map(({ id }) => ({ boardId: project.id, userId: id })),
+    });
+    for (const response of [
+      await columns.POST(
+        request("POST", owner.cookie, { name: "Over limit" }),
+        context,
+      ),
+      await cards.POST(
+        request("POST", owner.cookie, {
+          columnId: target.id,
+          title: "Over limit",
+        }),
+      ),
+      await members.POST(
+        request("POST", owner.cookie, { email: extra.email }),
+        context,
+      ),
+    ])
+      expect(await json(response, 409)).toMatchObject({
+        error: { code: "LIMIT_REACHED" },
+      });
+  });
+
   it("rolls back the card update when PostgreSQL rejects the activity insert", async () => {
     const owner = await user("Owner");
     const project = await createBoard(owner.cookie);
@@ -580,6 +824,7 @@ describe.skipIf(!connectionString)("Kanban API with PostgreSQL", () => {
           work({
             ...repos,
             activity: {
+              ...repos.activity,
               write: (data) =>
                 repos.activity.write({ ...data, actorId: missingActor }),
             },
