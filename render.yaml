@@ -3,8 +3,8 @@ services:
     name: kanban-board
     runtime: node
     plan: free
-    # Match Neon AWS US West (Oregon). Choose both regions before creating the service.
-    region: oregon
+    # Match Neon AWS US East (Ohio). Choose both regions before creating the service.
+    region: ohio
     branch: main
     autoDeployTrigger: commit
     # Render Free has no pre-deploy command.
