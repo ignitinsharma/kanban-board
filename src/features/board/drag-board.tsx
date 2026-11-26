@@ -203,6 +203,10 @@ function currentPreview(drag: Drag, detail: BoardDetail, items: PreviewItems) {
 function moveNotice(error: unknown) {
   if (!(error instanceof ApiError))
     return "Could not move the card. Check your connection and try again.";
+  if (error.status === 429)
+    return error.retryAfter === null
+      ? "Too many requests. Try again shortly."
+      : `Too many requests. Try again in ${error.retryAfter} seconds.`;
   if (error.status === 409)
     return "The board changed. Your move was not applied.";
   if (error.status === 404)

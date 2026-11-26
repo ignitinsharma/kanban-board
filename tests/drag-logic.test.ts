@@ -339,3 +339,22 @@ it("preserves a newer remote move when a pending request later fails", async () 
   expect(get().cards.find(({ id }) => id === active.id)).toEqual(remote);
   query.clear();
 });
+
+it("rolls back a rate-limited move and retains the Retry-After value", async () => {
+  const { query, get } = fixture();
+  const refetch = vi.spyOn(query, "invalidateQueries");
+  await expect(
+    commitCardMove(
+      query,
+      boardId,
+      "owner",
+      { id: active.id, drop },
+      async () => {
+        throw new ApiError(429, "RATE_LIMITED", "Too many requests", 21);
+      },
+    ),
+  ).rejects.toMatchObject({ status: 429, retryAfter: 21 });
+  expect(get().cards.find(({ id }) => id === active.id)).toEqual(active);
+  expect(refetch).not.toHaveBeenCalled();
+  query.clear();
+});
