@@ -95,3 +95,35 @@ ingress. Requests without a trusted IP share a fallback bucket.
 Registration returns 409 for an existing email. We accept account
 enumeration on registration for clearer feedback. Login returns the same
 generic 401 for unknown emails and wrong passwords.
+
+## ADR 012 · Board access, deletion, and limits
+
+Services require membership for board-scoped actions. Missing and
+inaccessible resources both return the same 404 response. Any member
+can edit. Board deletion requires ownership and returns 403 for
+other members. A column with cards returns 409 on deletion so the
+user can move or delete its cards first.
+
+Limits are 20 boards per owner, 12 columns per board, 500 cards per
+board, and 20 members per board. Exceeding a limit returns 409.
+An owner row lock serializes board creation. A board row lock
+serializes board mutations so count checks, mutations, and activity
+writes share one transaction.
+
+## ADR 013 · Concurrent ordering and events
+
+A move first checks that the requested neighbors are adjacent in the
+destination, excluding the moving item. After taking the board lock,
+it reloads the destination. If an overlapping mutation inserted items
+between the same unchanged anchors, the move inserts immediately
+before the original right anchor or appends when that anchor is
+open-ended. Missing or changed anchors and an initially stale gap
+return `409 STALE_ORDER`. Unique position conflicts are retried up
+to three times with fresh reads.
+
+Activity is written in the mutation transaction. Services publish
+events after commit and log delivery failures without failing the
+request. An optional `X-Client-Id` UUID is included as
+`originClientId` so subscribers can recognize their own changes.
+Absent or invalid values become null. This header carries no
+authorization information. The bus is in memory and scoped by board.

@@ -80,3 +80,33 @@ The public user has `id`, `email`, and `name`. The session lasts seven
 days. Login allows 10 attempts per 15 minutes per IP and per IP/email
 pair. Registration allows five attempts per hour per IP. A limited
 request returns 429 with `Retry-After` in seconds.
+
+### Boards, columns, and cards
+
+| Method | Path | Success response |
+| --- | --- | --- |
+| GET | `/api/boards` | 200, boards the current user belongs to |
+| POST | `/api/boards` | 201, board detail with four default columns |
+| GET | `/api/boards/[boardId]` | 200, board detail with members, ordered columns, and ordered cards |
+| PATCH | `/api/boards/[boardId]` | 200, renamed board |
+| DELETE | `/api/boards/[boardId]` | 204, owner only |
+| POST | `/api/boards/[boardId]/members` | 201, public user added by email |
+| POST | `/api/boards/[boardId]/columns` | 201, appended column |
+| PATCH | `/api/columns/[columnId]` | 200, renamed column |
+| PATCH | `/api/columns/[columnId]/move` | 200, reordered column |
+| DELETE | `/api/columns/[columnId]` | 204, empty column removed |
+| POST | `/api/cards` | 201, card appended to the supplied `columnId` |
+| PATCH | `/api/cards/[cardId]` | 200, updated card |
+| PATCH | `/api/cards/[cardId]/move` | 200, moved card |
+| DELETE | `/api/cards/[cardId]` | 204, card removed |
+
+Move requests provide `previousId` and `nextId`. Send `null` at either
+end. Card moves also provide the destination `columnId`. Reload the
+board before retrying a `409 STALE_ORDER`. A populated column returns
+409 on deletion. Board, column, card, and member responses use public
+fields and ISO timestamps where present.
+
+Expect 400 for invalid input, 401 for missing authentication, 404 for
+missing or inaccessible resources, 409 for conflicts and limits, and
+422 for invalid assignments or move destinations. A member who tries
+to delete a board they do not own receives 403.
