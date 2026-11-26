@@ -11,7 +11,7 @@ import { Button } from "@/components/button";
 import { InlineError } from "@/components/inline-error";
 import { Skeleton } from "@/components/skeleton";
 import { apiClient } from "@/lib/api-client";
-import type { ActivityPage } from "@/shared/activity";
+import type { ActivityEntry, ActivityPage } from "@/shared/activity";
 import { formatActivity } from "./activity-format";
 import { boardDetailQuery } from "./board-query";
 import styles from "./activity-panel.module.css";
@@ -41,6 +41,12 @@ function fetchPage(
   return apiClient<ActivityPage>(`/api/boards/${boardId}/activity${suffix}`, {
     signal,
   });
+}
+
+function newestFirst(a: ActivityEntry, b: ActivityEntry) {
+  const left = a.createdAt + a.id;
+  const right = b.createdAt + b.id;
+  return left === right ? 0 : left > right ? -1 : 1;
 }
 
 export function ActivityPanel({
@@ -79,6 +85,39 @@ export function ActivityPanel({
     let previous = client.getQueryData(key);
     let timer: ReturnType<typeof setTimeout>;
     let controller: AbortController | undefined;
+    let pending: ActivityPage | undefined;
+    const activityKey = ["activity", boardId];
+    const merge = () => {
+      if (
+        !pending ||
+        client.getQueryState(activityKey)?.fetchStatus === "fetching"
+      )
+        return;
+      const page = pending;
+      pending = undefined;
+      client.setQueryData<InfiniteData<ActivityPage, string | null>>(
+        activityKey,
+        (existing) => {
+          if (!existing?.pages.length)
+            return { pages: [page], pageParams: [null] };
+          const [first, ...older] = existing.pages;
+          if (!first.items.length)
+            return { ...existing, pages: [page, ...older] };
+          const known = new Set(
+            existing.pages.flatMap(({ items }) => items.map(({ id }) => id)),
+          );
+          const additions = page.items.filter(({ id }) => !known.has(id));
+          if (!additions.length) return existing;
+          return {
+            ...existing,
+            pages: [
+              { ...first, items: [...additions, ...first.items] },
+              ...older,
+            ],
+          };
+        },
+      );
+    };
     const run = () => {
       controller?.abort();
       const signal = (controller = new AbortController()).signal;
@@ -86,38 +125,8 @@ export function ActivityPanel({
         .then((page) => {
           if (signal.aborted) return;
           setRefreshError(false);
-          client.setQueryData<InfiniteData<ActivityPage, string | null>>(
-            ["activity", boardId],
-            (existing) => {
-              if (!existing?.pages.length)
-                return { pages: [page], pageParams: [null] };
-              const [first, ...older] = existing.pages;
-              if (!first.items.length)
-                return { ...existing, pages: [page, ...older] };
-              const known = new Set(page.items.map(({ id }) => id));
-              return {
-                ...existing,
-                pages: [
-                  {
-                    ...first,
-                    items: [
-                      ...page.items,
-                      ...first.items.filter(({ id }) => !known.has(id)),
-                    ].sort((a, b) =>
-                      a.createdAt === b.createdAt
-                        ? a.id < b.id
-                          ? 1
-                          : -1
-                        : a.createdAt < b.createdAt
-                          ? 1
-                          : -1,
-                    ),
-                  },
-                  ...older,
-                ],
-              };
-            },
-          );
+          pending = page;
+          merge();
         })
         .catch(() => {
           if (!signal.aborted) setRefreshError(true);
@@ -126,6 +135,14 @@ export function ActivityPanel({
     refresh.current = run;
     if (client.getQueryData(["activity", boardId])) run();
     const unsubscribe = client.getQueryCache().subscribe((event) => {
+      if (
+        event.type === "updated" &&
+        event.query.queryKey[0] === "activity" &&
+        event.query.queryKey[1] === boardId
+      ) {
+        merge();
+        return;
+      }
       if (
         event.type !== "updated" ||
         event.query.queryKey.length !== key.length ||
@@ -145,7 +162,8 @@ export function ActivityPanel({
     };
   }, [boardId, client]);
 
-  const items = activity.data?.pages.flatMap((page) => page.items) ?? [];
+  const items =
+    activity.data?.pages.flatMap((page) => page.items).sort(newestFirst) ?? [];
 
   return (
     <aside
@@ -208,8 +226,20 @@ export function ActivityPanel({
         )}
         {activity.hasNextPage && (
           <Button
-            disabled={activity.isFetchingNextPage}
-            onClick={() => void activity.fetchNextPage()}
+            aria-disabled={activity.isFetchingNextPage}
+            onClick={(event) => {
+              if (activity.isFetchingNextPage) return;
+              const button = event.currentTarget;
+              void activity.fetchNextPage().then((result) => {
+                if (
+                  !result.hasNextPage &&
+                  (document.activeElement === button ||
+                    document.activeElement === document.body)
+                ) {
+                  close.current?.focus();
+                }
+              });
+            }}
           >
             {activity.isFetchNextPageError ? "Retry" : "Load more"}
           </Button>
