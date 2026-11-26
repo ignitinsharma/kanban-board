@@ -255,3 +255,17 @@ If the active card or its destination disappears, or a filter turns
 on during the drag, replace the keyed DndContext and discard the local
 preview. Guard callbacks by the context generation so a late drop
 from the old interaction cannot submit a move.
+
+## Activity history
+
+Activity uses keyset pagination on creation time and ID, both descending,
+through the existing board activity index. The ID breaks ties when several
+entries share a timestamp. The API returns structured snapshots and actor
+names, and the browser formats the entries. Member-added snapshots retain
+the added member’s email because board members can already see it in the
+members list. Actor email is excluded from the actor object.
+
+While the panel is open, board-detail changes schedule a first-page refresh
+after 500 ms. Previously loaded entries and the tail cursor are preserved.
+The refresh also keeps entries displaced from the first page, so new actions
+do not create a gap in the loaded history.
