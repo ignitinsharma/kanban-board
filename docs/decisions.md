@@ -230,3 +230,23 @@ Use a dedicated keyboard handle to keep editing and dragging
 independent. Pointer and touch interactions use separate activation
 rules. Measure production drag scripting, long tasks, card renders,
 and cache writes on a board with at least 150 cards.
+
+## ADR 018 · Client-side board filters
+
+Filter the cached BoardDetail, which is bounded at 500 cards and kept
+current by SSE. This supersedes the server-side ILIKE approach in
+ADR 009. Filtering responds immediately to board changes and needs no
+endpoint or extra query key. The board and assignee and board and
+priority indexes remain available for future server queries. This UI
+does not use them.
+
+Store assignee, priority, and search text as assignee, priority, and
+q in the URL. Assignee also accepts unassigned. Ignore invalid values.
+Use router replacement without scrolling so changing filters does not
+add history entries. Match all normalized search terms across title
+and description.
+
+Disable card dragging while any filter is active. Visible neighbors
+can have hidden cards between them in the full column, so they cannot
+safely describe a server drop slot. Editing and adding cards remain
+available.
