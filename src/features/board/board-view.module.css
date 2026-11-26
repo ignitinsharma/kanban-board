@@ -1,0 +1,115 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  height: calc(100dvh - var(--top-bar-height));
+  min-width: 0;
+}
+.heading {
+  flex: none;
+  display: flex;
+  justify-content: space-between;
+  align-items: end;
+  gap: var(--space-4);
+  padding: var(--space-4) var(--space-6);
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+}
+.heading h1 {
+  overflow-wrap: anywhere;
+}
+.back {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  min-height: var(--control-height);
+  color: var(--color-text-muted);
+  text-decoration: none;
+}
+.back:hover {
+  color: var(--color-accent);
+}
+.back span {
+  font-size: var(--type-lg);
+  line-height: 1;
+}
+.columns {
+  flex: 1;
+  display: flex;
+  align-items: stretch;
+  min-width: 0;
+  min-height: 0;
+  gap: var(--space-4);
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: var(--space-6);
+}
+.columns:focus-visible,
+.cards:focus-visible {
+  outline-offset: -2px;
+}
+.column {
+  display: flex;
+  flex-direction: column;
+  flex: 0 0 288px;
+  min-height: 0;
+  max-width: calc(100vw - var(--space-12));
+  padding: var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-subtle);
+  gap: var(--space-3);
+}
+.columnHeading {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--space-2);
+  padding-inline: var(--space-1);
+}
+.columnHeading h2 {
+  overflow-wrap: anywhere;
+}
+.count {
+  color: var(--color-text-muted);
+  font-size: var(--type-xs);
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+.cards {
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.card {
+  padding: var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+}
+.card + .card {
+  margin-top: var(--space-2);
+}
+.cardTitle {
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+.cardMeta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  min-height: 28px;
+  margin-top: var(--space-2);
+}
+.emptyColumn {
+  padding: var(--space-2) var(--space-1);
+  color: var(--color-text-muted);
+}
+.feedback {
+  max-width: 560px;
+  width: 100%;
+  margin-inline: auto;
+  padding: var(--space-6);
+}

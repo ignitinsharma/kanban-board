@@ -7,7 +7,10 @@ import { subscribeToBoard, type ConnectionState } from "./board-subscription";
 export function useBoardEvents(
   boardId: string,
   clientId: string,
-  onUnauthorized?: () => void,
+  {
+    onUnauthorized,
+    retry,
+  }: { onUnauthorized?: () => void; retry?: number } = {},
 ) {
   const query = useQueryClient();
   const [state, setState] = useState<ConnectionState>("connecting");
@@ -22,7 +25,7 @@ export function useBoardEvents(
       subscribeToBoard(query, boardId, setState, undefined, () =>
         callback.current?.(),
       ),
-    [query, boardId, clientId],
+    [query, boardId, clientId, retry],
   );
 
   return state;
