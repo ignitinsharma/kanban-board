@@ -1,5 +1,7 @@
 # Kanban Board
 
+[![CI](https://github.com/ignitinsharma/kanban-board/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/ignitinsharma/kanban-board/actions/workflows/ci.yml)
+
 ## Overview
 
 A collaborative Kanban board with cards, columns, members, and activity history.
