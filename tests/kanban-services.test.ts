@@ -58,14 +58,12 @@ function fixture() {
       find: vi.fn().mockResolvedValue(column),
       list: vi.fn().mockResolvedValue([]),
       remove: vi.fn(),
-      create: vi
-        .fn()
-        .mockImplementation(async (boardId, name, position) => ({
-          ...column,
-          boardId,
-          name,
-          position,
-        })),
+      create: vi.fn().mockImplementation(async (boardId, name, position) => ({
+        ...column,
+        boardId,
+        name,
+        position,
+      })),
       update: vi
         .fn()
         .mockImplementation(async (_id, data) => ({ ...column, ...data })),
@@ -437,5 +435,37 @@ it("appends columns and cards and captures member, column, and card deletion sna
   expect(events.publish).toHaveBeenLastCalledWith(
     board.id,
     expect.objectContaining({ type: "column.deleted" }),
+  );
+});
+
+it("retries one position conflict and publishes the move at the reloaded position", async () => {
+  const { db, deps, events } = fixture();
+  const left = { ...card, id: "left", position: "a0" };
+  const right = { ...card, id: "right", position: "a1" };
+  const concurrent = { ...card, id: "concurrent", position: "a0V" };
+  db.cards.find.mockResolvedValue({ ...card, columnId: "source" });
+  db.columns.find.mockImplementation(async (id) => ({ ...column, id }));
+  db.cards.list
+    .mockResolvedValue([left, concurrent, right])
+    .mockResolvedValueOnce([left, right])
+    .mockResolvedValueOnce([left, right]);
+  db.cards.update.mockRejectedValueOnce(new RepositoryConflict(undefined));
+  const moved = await createCardService(deps).move(
+    card.id,
+    {
+      columnId: column.id,
+      previousId: left.id,
+      nextId: right.id,
+    },
+    actor,
+  );
+  expect(db.cards.update).toHaveBeenCalledTimes(2);
+  expect(
+    moved.position > concurrent.position && moved.position < right.position,
+  ).toBe(true);
+  expect(db.activity.write).toHaveBeenCalledOnce();
+  expect(events.publish).toHaveBeenCalledExactlyOnceWith(
+    board.id,
+    expect.objectContaining({ type: "card.moved", entity: moved }),
   );
 });

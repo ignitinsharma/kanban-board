@@ -25,7 +25,7 @@ import { signSession } from "../src/server/security/session";
 import { boardEvents } from "../src/server/realtime/event-bus";
 import { runInTransaction } from "../src/server/repositories/transaction";
 import { createCardService } from "../src/server/services/card.service";
-import type { BoardDetail, Card, Column } from "../src/shared/board";
+import type { Board, BoardDetail, Card, Column } from "../src/shared/board";
 import type { PublicUser } from "../src/shared/auth";
 
 const connectionString = process.env.TEST_DATABASE_URL;
@@ -471,5 +471,162 @@ describe.skipIf(!connectionString)("Kanban API with PostgreSQL", () => {
     expect(await json(stale, 409)).toMatchObject({
       error: { code: "STALE_ORDER" },
     });
+  });
+  it("lists owned and joined boards and excludes unrelated boards", async () => {
+    const caller = await user("Caller");
+    const owner = await user("Other owner");
+    const own = await createBoard(caller.cookie);
+    const joined = await createBoard(owner.cookie);
+    await createBoard(owner.cookie);
+    expect(
+      (
+        await members.POST(
+          request("POST", owner.cookie, { email: caller.email }),
+          params("boardId", joined.id),
+        )
+      ).status,
+    ).toBe(201);
+    const visible = await json<Board[]>(
+      await boards.GET(request("GET", caller.cookie)),
+      200,
+    );
+    expect(visible.map(({ id }) => id).sort()).toEqual(
+      [own.id, joined.id].sort(),
+    );
+  });
+
+  it("returns columns and their cards in byte-wise fractional position order", async () => {
+    const owner = await user("Owner");
+    const project = await createBoard(owner.cookie);
+    const keys = ["a0A", "a0Z", "a0a"];
+    await db.column.deleteMany({ where: { boardId: project.id } });
+    for (const position of [...keys].reverse()) {
+      const created = await db.column.create({
+        data: { boardId: project.id, name: position, position },
+      });
+      await db.card.createMany({
+        data: [...keys]
+          .reverse()
+          .map((key) => ({
+            boardId: project.id,
+            columnId: created.id,
+            position: key,
+            title: key,
+          })),
+      });
+    }
+    const visible = await json<BoardDetail>(
+      await board.GET(
+        request("GET", owner.cookie),
+        params("boardId", project.id),
+      ),
+      200,
+    );
+    expect(visible.columns.map(({ position }) => position)).toEqual(keys);
+    expect(
+      visible.cards.map(({ columnId, position }) => [columnId, position]),
+    ).toEqual(
+      visible.columns.flatMap(({ id }) => keys.map((key) => [id, key])),
+    );
+  });
+
+  it("drops malformed origin IDs and forwards valid UUIDs on published events", async () => {
+    const owner = await user("Owner");
+    const project = await createBoard(owner.cookie);
+    const listener = vi.fn();
+    const stop = boardEvents.subscribe(project.id, listener);
+    const clientId = randomUUID();
+    try {
+      for (const [name, origin] of [
+        ["First", "malformed"],
+        ["Second", clientId],
+      ]) {
+        expect(
+          (
+            await board.PATCH(
+              request("PATCH", owner.cookie, { name }, origin),
+              params("boardId", project.id),
+            )
+          ).status,
+        ).toBe(200);
+      }
+      expect(
+        listener.mock.calls.map(([event]) => event.originClientId),
+      ).toEqual([null, clientId]);
+    } finally {
+      stop();
+    }
+  });
+
+  it("rolls back the card update when PostgreSQL rejects the activity insert", async () => {
+    const owner = await user("Owner");
+    const project = await createBoard(owner.cookie);
+    const issue = await createCard(
+      owner.cookie,
+      project.columns[0].id,
+      "Original",
+    );
+    const listener = vi.fn();
+    const stop = boardEvents.subscribe(project.id, listener);
+    const missingActor = randomUUID();
+    const service = createCardService({
+      events: boardEvents,
+      transaction: (work) =>
+        runInTransaction((repos) =>
+          work({
+            ...repos,
+            activity: {
+              write: (data) =>
+                repos.activity.write({ ...data, actorId: missingActor }),
+            },
+          }),
+        ),
+    });
+    try {
+      await expect(
+        service.update(
+          issue.id,
+          { title: "Uncommitted" },
+          {
+            actorId: owner.id,
+            originClientId: null,
+          },
+        ),
+      ).rejects.toMatchObject({ code: "P2003" });
+      const restored = await db.card.findUniqueOrThrow({
+        where: { id: issue.id },
+      });
+      expect(restored.title).toBe("Original");
+      expect(restored.updatedAt.toISOString()).toBe(issue.updatedAt);
+      expect(
+        await db.activityLog.count({
+          where: { cardId: issue.id, action: "CARD_UPDATED" },
+        }),
+      ).toBe(0);
+      expect(listener).not.toHaveBeenCalled();
+    } finally {
+      stop();
+    }
+  });
+
+  it("leaves activity and events unchanged on a no-op column rename", async () => {
+    const owner = await user("Owner");
+    const project = await createBoard(owner.cookie);
+    const before = project.columns[0];
+    const listener = vi.fn();
+    const stop = boardEvents.subscribe(project.id, listener);
+    try {
+      const response = await column.PATCH(
+        request("PATCH", owner.cookie, { name: before.name }),
+        params("columnId", before.id),
+      );
+      expect(await json(response, 200)).toEqual(before);
+      expect(
+        await db.activityLog.count({ where: { boardId: project.id } }),
+      ).toBe(0);
+      expect(listener).not.toHaveBeenCalled();
+    } finally {
+      stop();
+    }
   });
 });
