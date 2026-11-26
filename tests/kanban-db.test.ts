@@ -251,7 +251,11 @@ describe.skipIf(!connectionString)("Kanban API with PostgreSQL", () => {
       }),
       issueCtx,
     );
-    expect(await json(moved, 200)).toMatchObject({ columnId: extra.id });
+    expect(await json(moved, 200)).toMatchObject({
+      id: issue.id,
+      columnId: extra.id,
+      position: "a0",
+    });
     const detail = await json<BoardDetail>(
       await board.GET(request("GET", owner.cookie), ctx),
       200,
