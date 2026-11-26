@@ -7,7 +7,14 @@ const globalForPrisma = globalThis as typeof globalThis & {
 };
 
 export function getPrisma() {
-  return (globalForPrisma.prisma ??= new PrismaClient({
-    adapter: new PrismaPg({ connectionString: getEnv().DATABASE_URL }),
+  if (globalForPrisma.prisma) return globalForPrisma.prisma;
+  const env = getEnv();
+  return (globalForPrisma.prisma = new PrismaClient({
+    adapter: new PrismaPg({
+      connectionString: env.DATABASE_URL,
+      max: env.DB_POOL_MAX,
+      idleTimeoutMillis: env.DB_IDLE_TIMEOUT_MS,
+      connectionTimeoutMillis: env.DB_CONNECT_TIMEOUT_MS,
+    }),
   }));
 }

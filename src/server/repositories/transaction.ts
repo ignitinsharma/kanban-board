@@ -20,7 +20,7 @@ export const runInTransaction: RunInTransaction = async (work) => {
   try {
     return await getPrisma().$transaction(
       (tx) => work(createRepositories(tx)),
-      { isolationLevel: "ReadCommitted" },
+      { isolationLevel: "ReadCommitted", maxWait: 20_000, timeout: 15_000 },
     );
   } catch (error) {
     if (error instanceof Error && "code" in error) {
