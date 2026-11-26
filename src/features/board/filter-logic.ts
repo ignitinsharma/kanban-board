@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "@/shared/validation";
 import type { BoardDetail, Card } from "@/shared/board";
 import { cardFiltersSchema, type CardPriority } from "@/shared/kanban";
 import { buildItems, type PreviewItems } from "./drag-logic";

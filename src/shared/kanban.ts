@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "./validation";
 import { sanitizeText } from "./sanitize";
 
 export const cardPrioritySchema = z.enum(["LOW", "MEDIUM", "HIGH", "URGENT"]);

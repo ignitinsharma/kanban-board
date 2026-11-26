@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "./validation";
 import { emailSchema, nameSchema } from "./kanban";
 
 const passwordBytes = (value: string) => new TextEncoder().encode(value).length;

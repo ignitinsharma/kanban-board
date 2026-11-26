@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "./validation";
 import type { ActivityAction } from "./kanban";
 
 export type ActivityEntry = {

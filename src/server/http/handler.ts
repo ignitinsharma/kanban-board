@@ -5,6 +5,7 @@ export function withErrorHandling<Args extends unknown[]>(
   handler: (request: Request, ...args: Args) => Response | Promise<Response>,
 ) {
   return async (request: Request, ...args: Args): Promise<Response> => {
+    let response: Response;
     try {
       const origin = request.headers.get("origin");
       if (
@@ -27,9 +28,16 @@ export function withErrorHandling<Args extends unknown[]>(
           );
         }
       }
-      return await handler(request, ...args);
+      response = await handler(request, ...args);
     } catch (error) {
-      return errorToResponse(error);
+      response = errorToResponse(error);
     }
+    if (
+      response.headers.get("content-type")?.startsWith("application/json") &&
+      !response.headers.has("cache-control")
+    ) {
+      response.headers.set("Cache-Control", "no-store");
+    }
+    return response;
   };
 }

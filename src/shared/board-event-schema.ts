@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "./validation";
 import type { BoardEvent } from "./events";
 import { cardPrioritySchema, idSchema } from "./kanban";
 
