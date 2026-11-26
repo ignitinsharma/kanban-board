@@ -3,6 +3,7 @@ import { RateLimitError } from "@/server/http/errors";
 import { withErrorHandling } from "@/server/http/handler";
 import { streamAdmission } from "@/server/realtime/admission";
 import { boardEvents } from "@/server/realtime/event-bus";
+import { shutdownSignal } from "@/server/realtime/shutdown";
 import { boardEventStream } from "@/server/realtime/sse";
 import { runInTransaction } from "@/server/repositories/transaction";
 import { requireSession } from "@/server/security/auth";
@@ -28,6 +29,7 @@ export const GET = withErrorHandling(
         boardId,
         expiresAt,
         signal: request.signal,
+        shutdown: shutdownSignal(),
         events: boardEvents,
         authorize,
         release,

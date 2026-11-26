@@ -12,7 +12,7 @@ const event: BoardEvent = {
   entity: { id: "card" },
 };
 
-function fixture(lifetime = 3_600_000) {
+function fixture(lifetime = 3_600_000, shutdown?: AbortSignal) {
   vi.useFakeTimers();
   const abort = new AbortController();
   const events = new MemoryEventBus<BoardEvent>();
@@ -31,6 +31,7 @@ function fixture(lifetime = 3_600_000) {
     boardId: event.boardId,
     events,
     signal: abort.signal,
+    shutdown,
     release,
     authorize,
     expiresAt: Date.now() + lifetime,
@@ -106,4 +107,15 @@ it("caps streams per user and process, and reuses slots", () => {
   expect(admission.acquire("three")).toBeTypeOf("function");
   expect(admission.acquire("four")).toBeNull();
   other();
+});
+
+it("ends an open stream and releases resources when shutdown starts", async () => {
+  const shutdown = new AbortController();
+  const { reader, release, unsubscribed } = fixture(60_000, shutdown.signal);
+  expect((await reader.read()).done).toBe(false);
+  shutdown.abort();
+  expect((await reader.read()).done).toBe(true);
+  expect(release).toHaveBeenCalledOnce();
+  expect(unsubscribed).toHaveBeenCalledOnce();
+  expect(vi.getTimerCount()).toBe(0);
 });

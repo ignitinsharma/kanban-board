@@ -9,13 +9,17 @@ type StreamOptions = {
   boardId: string;
   expiresAt: number;
   signal: AbortSignal;
+  shutdown?: AbortSignal;
   events: EventBus<BoardEvent>;
   authorize: () => Promise<void>;
   release: () => void;
 };
 
 export function boardEventStream(options: StreamOptions) {
-  const { boardId, signal, events, authorize, release } = options;
+  const { boardId, events, authorize, release } = options;
+  const signal = options.shutdown
+    ? AbortSignal.any([options.signal, options.shutdown])
+    : options.signal;
   const deadline = Math.min(options.expiresAt, Date.now() + 55 * 60_000);
   let controller: ReadableStreamDefaultController<Uint8Array>;
   let closed = false;
