@@ -43,3 +43,33 @@ Use TanStack Query for optimistic mutations, rollback, and reconciliation with s
 **Status** Accepted
 
 Use npm with a committed lockfile, Vitest for unit and API integration coverage, and GitHub Actions for lint, typecheck, and tests on pushes and pull requests. Phase 0 establishes tooling and module boundaries. Subsequent phases cover the required Kanban workflows and activity history.
+
+## ADR 007 · Fractional ordering
+
+Store fractional-indexing keys as text with PostgreSQL `COLLATE "C"` so
+database ordering matches ordinal key comparison. The migration declares
+the collation on both position columns. Unique indexes protect positions
+within a board's columns and within a column's cards. Services calculate
+keys from current neighbors inside the board write transaction.
+
+## ADR 008 · Deletion and activity history
+
+PostgreSQL cascades board deletion to memberships, columns, cards, and
+activity. Column deletion cascades to cards. Card and column links on
+activity use SET NULL, so snapshot details in JSON remain available.
+User deletion cascades memberships and clears card assignments. RESTRICT
+protects board ownership and the actor on retained activity.
+
+## ADR 009 · Board search and integrity
+
+Repositories use parameterized ILIKE on card titles and descriptions,
+scoped to a board. Literal substring matching over board-scoped candidates
+is adequate at assignment scale. Services validate that an assignee is a
+board member and that a card's column belongs to the card's board inside
+the write transaction.
+
+## ADR 010 · Session lifetime
+
+Use one signed JWT in an HttpOnly cookie with a seven-day expiry and no
+refresh token. Logout clears the browser cookie. A copied token remains
+usable until expiry while its user exists and the signing secret is valid.
