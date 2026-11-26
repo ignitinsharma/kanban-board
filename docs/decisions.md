@@ -200,3 +200,33 @@ values when the card opened. This preserves concurrent changes to fields
 the user did not edit. A no-op save sends no request. A deleted card
 cannot be saved, and a card deletion that returns 404 is applied locally
 as a deletion.
+
+## ADR 017 · Optimistic card drag and drop
+
+The board keeps an ordered list of card IDs per column while dragging.
+Only a changed drop slot updates this preview. Live events still
+update the query cache. Rebuild the preview from the latest board and
+reapply the active slot after a live change. Cancel if the active
+card or its destination disappears. A separate overlay renders the
+dragged card. Keep presentation memoized inside each sortable wrapper.
+
+On drop, derive the intended neighbors from the preview and skip an
+unchanged move. Cancel the board fetch, read the latest card and
+neighbors, and write one optimistic position while preserving the
+card's timestamp. Submit the neighbor IDs to the server. If the
+neighbors cannot define a valid position, skip the optimistic write
+and reconcile from a fresh snapshot.
+
+Use the same event reducer for the response and SSE echo so either
+can arrive first. Equal timestamps with conflicting data trigger a
+refetch. On failure, roll back only the ordering fields and only
+while the cached card still matches the optimistic location and
+original revision. This also protects a newer event at the same
+position. Reconcile conflicts, missing cards, and ambiguous transport
+failures with the server. Keep only the moving card unavailable
+while its request is pending, and clear the preview on every exit.
+
+Use a dedicated keyboard handle to keep editing and dragging
+independent. Pointer and touch interactions use separate activation
+rules. Measure production drag scripting, long tasks, card renders,
+and cache writes on a board with at least 150 cards.
