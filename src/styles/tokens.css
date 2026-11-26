@@ -1,19 +1,96 @@
-/* TODO: Replace these neutral placeholders when DESIGN.md is available. */
 :root {
-  --color-background: #fafafa;
-  --color-surface: #ffffff;
-  --color-text: #222222;
-  --color-border: #dedede;
-  --color-accent: #315ea8;
-  --spacing-1: 4px;
-  --spacing-2: 8px;
-  --spacing-3: 16px;
-  --radius: 4px;
-  --font-family: system-ui, sans-serif;
+  color-scheme: light;
+  --color-canvas: #f4f6f8;
+  --color-surface: #fff;
+  --color-surface-raised: #fff;
+  --color-subtle: #e9edf2;
+  --color-border: #c9d2dc;
+  --color-control-border: #798798;
+  --color-text: #182230;
+  --color-text-muted: #4b596b;
+  --color-accent: #2356a3;
+  --color-accent-text: #fff;
+  --color-danger: #a12632;
+  --color-danger-surface: #fff0f1;
+  --color-overlay: #18223066;
+  --priority-low: #465569;
+  --priority-medium: #284e81;
+  --priority-high: #794408;
+  --priority-urgent: #982a34;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --radius: 6px;
+  --radius-small: 4px;
+  --font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  --type-xs: 12px;
+  --type-sm: 14px;
+  --type-base: 16px;
+  --type-lg: 20px;
+  --type-xl: 24px;
+  --control-small: 32px;
+  --control-height: 36px;
+  --top-bar-height: 60px;
+  --z-header: 10;
+  --z-overlay: 20;
+  --transition-fast: 120ms;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
 }
 
 body {
-  background: var(--color-background);
+  margin: 0;
+  background: var(--color-canvas);
   color: var(--color-text);
-  font-family: var(--font-family);
+  font: 400 var(--type-sm)/1.5 var(--font-family);
+}
+
+h1,
+h2,
+h3,
+p {
+  margin: 0;
+}
+h1,
+h2,
+h3,
+strong,
+b {
+  font-weight: 600;
+}
+h1 {
+  font-size: var(--type-xl);
+  line-height: 1.25;
+}
+h2 {
+  font-size: var(--type-base);
+}
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+a {
+  color: var(--color-accent);
+  text-underline-offset: 3px;
+}
+:where(a, button, input, textarea, select, [tabindex]):focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 3px;
+}
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --transition-fast: 0ms;
+  }
 }

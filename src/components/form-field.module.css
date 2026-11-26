@@ -1,0 +1,17 @@
+.field {
+  display: grid;
+  gap: var(--space-1);
+}
+.field label {
+  font-weight: 600;
+}
+.hint {
+  color: var(--color-text-muted);
+}
+.error {
+  color: var(--color-danger);
+}
+.hint,
+.error {
+  font-size: var(--type-sm);
+}
