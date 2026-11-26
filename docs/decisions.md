@@ -22,7 +22,7 @@ The npm lockfile pins the Prisma CLI's transitive `effect` dependency to a patch
 
 ## ADR 003 · Session authentication and request security
 
-**Status** Accepted for a later phase
+**Status** Accepted
 
 Use `jose` for JWT sessions in an HttpOnly, Secure, SameSite cookie and `bcrypt` to hash passwords. Protect application routes, validate and sanitize untrusted input, and rate-limit requests. The assignment requires one authenticated user model.
 
@@ -73,3 +73,21 @@ the write transaction.
 Use one signed JWT in an HttpOnly cookie with a seven-day expiry and no
 refresh token. Logout clears the browser cookie. A copied token remains
 usable until expiry while its user exists and the signing secret is valid.
+
+## ADR 011 · Passwords and authentication requests
+
+Hash passwords with bcrypt cost 12 and reject inputs over 72 UTF-8
+bytes. Login uses the same 401 message for a missing account and a
+wrong password, including a cost-12 dummy comparison for missing
+accounts. Authenticated API handlers call `requireUser` and look up
+the user behind the HS256 session. Page redirects use the same session
+lookup. The shared HTTP wrapper rejects a present Origin with a host
+that differs from the request host. Session cookies use SameSite=Lax,
+and HttpOnly. In production the cookie uses Secure and a __Host- name.
+
+Auth rate limits use fixed windows in memory for a single Render
+instance. Counts reset on process restart. Multiple instances would
+require a shared store implementing the limiter interface. On Render,
+the application trusts the Cloudflare ingress to overwrite
+CF-Connecting-IP and assumes the service is reachable only through that
+ingress. Requests without a trusted IP share a fallback bucket.

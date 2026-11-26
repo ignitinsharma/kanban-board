@@ -27,6 +27,12 @@ columns until the board is deleted.
 
 ## Local run
 
+Run `npm run dev` after database setup. Visit `/register` to create an
+account or `/login` to sign in. The home page requires a valid session.
+Generate `JWT_SECRET` with `openssl rand -base64 48` and keep the same
+value across restarts. Rotating it invalidates existing sessions.
+
+
 ## Testing
 
 Run `npm test` after generating Prisma Client. To run the PostgreSQL suite,
@@ -62,3 +68,15 @@ test -n "$DATABASE_URL_UNPOOLED" && npm ci --include=dev && npm run build && npx
 Set the start command to `npm start`.
 
 ## API overview
+
+| Method | Path | Behavior |
+| --- | --- | --- |
+| POST | `/api/auth/register` | Accepts JSON email, name, and password. Returns the public user with status 201 and a session cookie. |
+| POST | `/api/auth/login` | Accepts JSON email and password. Returns the public user with status 200 and a session cookie. |
+| POST | `/api/auth/logout` | Clears the cookie and returns 204. Send an empty request. |
+| GET | `/api/auth/me` | Returns the public user, or 401 without a valid session. |
+
+The public user has `id`, `email`, and `name`. The session lasts seven
+days. Login allows 10 attempts per 15 minutes per IP and per IP/email
+pair. Registration allows five attempts per hour per IP. A limited
+request returns 429 with `Retry-After` in seconds.
