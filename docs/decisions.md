@@ -250,3 +250,8 @@ Disable card dragging while any filter is active. Visible neighbors
 can have hidden cards between them in the full column, so they cannot
 safely describe a server drop slot. Editing and adding cards remain
 available.
+
+If the active card or its destination disappears, or a filter turns
+on during the drag, replace the keyed DndContext and discard the local
+preview. Guard callbacks by the context generation so a late drop
+from the old interaction cannot submit a move.

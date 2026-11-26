@@ -168,3 +168,37 @@ The drag preview is local. Dropping applies one optimistic move
 and sends the destination neighbors to the server. The response and
 SSE echo use the same reducer. A failed move restores its previous
 position when it is still safe, and a stale drop refreshes the board.
+
+### Filters and search
+
+Filter the live board by assignee, including Unassigned, or priority.
+Search looks for every word across the card title and description.
+The URL stores `assignee`, `priority`, and `q`, so a refresh preserves
+the view. Updating filters does not add browser history entries.
+Clear the filters to drag again. Hidden cards may sit between visible
+neighbors, so a filtered list cannot define a reliable drop position.
+
+### Performance
+
+Measured on a 150-card board in headless Chrome using the local
+production build. Phase 7 counted memoized card visuals separately
+from the overlay. Phase 8 also counted committed SortableCard wrapper
+renders. These are representative runs, with one drag of each kind.
+
+| Phase | Drag | Elapsed | Scripting | Tasks over 50 ms | Card visual renders | Overlay renders | Wrapper renders |
+| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| 7 | Within column | 3,241 ms | 286 ms | 0 | 0 | 1 | Unmeasured |
+| 7 | Across columns | 3,429 ms | 290 ms | 0 | 1 | 1 | Unmeasured |
+| 8 | Within column | 3,589 ms | 367 ms | 0 | 0 | 1 | 4,307 |
+| 8 | Across columns | 3,472 ms | 359 ms | 0 | 1 | 1 | 3,395 |
+
+All 150 wrappers rendered at least once in both Phase 8 drags,
+including every wrapper in the affected columns. Unrelated card
+visuals did not render. The board keeps the preview local and memoizes
+card visuals. It wrote nothing to the query cache during the drags and
+wrote once optimistically on each drop, followed by one authoritative
+confirmation. Typing a five-letter query rendered zero card visuals
+and zero wrappers before the debounce. Applying the filter committed
+four wrapper renders across the two visible cards and zero card visual
+renders. The counts exclude render attempts React did not commit.
+Physical-device performance was outside these checks.
