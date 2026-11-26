@@ -88,6 +88,7 @@ request returns 429 with `Retry-After` in seconds.
 | GET | `/api/boards` | 200, boards the current user belongs to |
 | POST | `/api/boards` | 201, board detail with four default columns |
 | GET | `/api/boards/[boardId]` | 200, board detail with members, ordered columns, and ordered cards |
+| GET | `/api/boards/[boardId]/activity` | 200, newest-first activity with `items` and `nextCursor`. Pass `limit` (1–50, default 30) and the opaque `cursor` to page. |
 | PATCH | `/api/boards/[boardId]` | 200, renamed board |
 | DELETE | `/api/boards/[boardId]` | 204, owner only |
 | POST | `/api/boards/[boardId]/members` | 201, public user added by email |
@@ -202,3 +203,22 @@ and zero wrappers before the debounce. Applying the filter committed
 four wrapper renders across the two visible cards and zero card visual
 renders. The counts exclude render attempts React did not commit.
 Physical-device performance was outside these checks.
+
+## Security
+
+Sessions use a seven-day signed JWT in an HttpOnly, SameSite=Lax cookie.
+Production adds Secure and the `__Host-` prefix. Passwords use bcrypt.
+Mutating requests with an Origin header must match the request host, and
+JSON requests require the correct content type. Board-scoped APIs return
+404 for non-members. Shared input schemas sanitize text and React escapes
+text rendered in the UI.
+
+All routes set CSP, frame protection, nosniff, referrer policy, and
+permissions policy. Production also sets HSTS and excludes `unsafe-eval`
+from CSP. The policy allows inline scripts for Next.js bootstrap and inline
+styles for component positioning. API JSON uses `Cache-Control: no-store`.
+
+Authenticated requests allow 120 mutations and 600 reads per user per
+minute. A 429 includes `Retry-After`. Auth attempts and SSE connections have
+separate limits. Counters and streams are process-local. JSON request
+bodies are capped at 64 KiB and 32 nested containers.

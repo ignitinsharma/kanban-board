@@ -267,5 +267,36 @@ members list. Actor email is excluded from the actor object.
 
 While the panel is open, board-detail changes schedule a first-page refresh
 after 500 ms. Previously loaded entries and the tail cursor are preserved.
-The refresh also keeps entries displaced from the first page, so new actions
-do not create a gap in the loaded history.
+The refresh keeps entries displaced from the first page when the fresh
+page overlaps the loaded history. A burst larger than the first page
+between refreshes can leave a gap until a new pagination session starts.
+
+## Browser security headers
+
+The catch-all Next.js header policy allows inline scripts for Next.js
+bootstrap and inline styles for component positioning. Nonce-based CSP
+would require per-request nonce propagation and dynamic rendering for
+otherwise static pages. Production excludes eval and sends HSTS without
+subdomain or preload directives. Browser schemas disable Zod’s
+generated parser so validation works with eval blocked. API JSON
+responses default to no-store through the handler, while SSE retains its
+stream-specific cache policy.
+
+## Protected API limits
+
+The authenticated user lookup applies independent fixed-window quotas of
+120 mutations and 600 reads per user per minute. SSE uses its existing
+connection admission controls. The limiter uses process-local memory,
+so multiple instances would need a shared implementation. A rate-limited
+move rolls back and shows the retry delay returned by the API.
+
+## JSON request bounds
+
+The reader counts UTF-8 bytes while streaming and rejects bodies above
+64 KiB before parsing. It also rejects more than 32 nested containers.
+Oversized bodies use 413, unsupported media types use 415, and invalid
+UTF-8 or JSON uses 400. Unexpected errors use a generic 500 response.
+
+## Production dependency audit
+
+The Phase 10 production dependency audit reported zero vulnerabilities.
