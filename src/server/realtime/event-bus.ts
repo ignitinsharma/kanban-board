@@ -37,4 +37,9 @@ export class MemoryEventBus<Event> implements EventBus<Event> {
   }
 }
 
-export const boardEvents: EventBus<BoardEvent> = new MemoryEventBus();
+const processBus = globalThis as typeof globalThis & {
+  kanbanBoardEvents?: EventBus<BoardEvent>;
+};
+
+export const boardEvents = (processBus.kanbanBoardEvents ??=
+  new MemoryEventBus<BoardEvent>());

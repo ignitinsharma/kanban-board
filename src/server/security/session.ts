@@ -18,7 +18,7 @@ export function signSession(userId: string) {
     .sign(signingKey());
 }
 
-export async function verifySession(token: string) {
+export async function verifySessionClaims(token: string) {
   const key = signingKey();
   try {
     const { payload } = await jwtVerify(token, key, {
@@ -27,8 +27,19 @@ export async function verifySession(token: string) {
       maxTokenAge: sessionMaxAge,
     });
     const subject = idSchema.safeParse(payload.sub);
-    return subject.success ? subject.data : null;
+    return subject.success &&
+      typeof payload.exp === "number" &&
+      typeof payload.iat === "number"
+      ? {
+          userId: subject.data,
+          expiresAt: Math.min(payload.exp, payload.iat + sessionMaxAge) * 1000,
+        }
+      : null;
   } catch {
     return null;
   }
+}
+
+export async function verifySession(token: string) {
+  return (await verifySessionClaims(token))?.userId ?? null;
 }
