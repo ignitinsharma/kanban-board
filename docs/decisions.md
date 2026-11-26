@@ -167,3 +167,21 @@ instances would need shared pub/sub and deployment-wide accounting if
 the connection cap must apply across instances. PostgreSQL
 LISTEN/NOTIFY would use a dedicated direct connection and compact
 notifications or event references.
+
+## ADR 015 · UI foundation and route groups
+
+Use CSS Modules for component styles and a shared token file for
+colors, typography, spacing, and controls. This keeps the small
+component set easy to inspect without a utility framework or UI kit.
+Use the system font and inline SVG only when it helps identify a
+control or destination. The application has no icon library.
+
+The `(auth)` route group holds login and registration. The `(app)`
+route group provides a server-authenticated shell for the board pages.
+Route groups do not change public URLs. API handlers continue to
+enforce authorization independently.
+
+The shared browser API client lazily creates one UUID per document
+in module memory and sends it as `X-Client-Id` on mutations. The same
+identity is available to the board subscription. Reloading starts
+a new identity. The ID provides correlation and grants no access.

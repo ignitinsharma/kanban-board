@@ -146,3 +146,15 @@ Scaling out requires a shared EventBus implementation such as Redis
 pub/sub or PostgreSQL LISTEN/NOTIFY to fan events out to each process.
 PostgreSQL would use a dedicated direct listener connection. A global
 stream cap would require shared accounting.
+
+## UI
+
+The authenticated shell links to a board list and a read-only live
+board. The list supports creating, renaming, and deleting boards.
+The board groups cards by column and updates from the SSE stream.
+
+Reusable visual controls live in `src/components`. Feature UI and
+query hooks live in `src/features`. The UI uses CSS Modules and
+shared variables in `src/styles/tokens.css`. Change
+`--color-accent` in that file to update the primary accent.
+Verify its contrast against `--color-accent-text` after changing it.
