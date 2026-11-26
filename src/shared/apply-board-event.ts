@@ -1,28 +1,8 @@
 import type { BoardDetail } from "./board";
 import type { BoardEvent } from "./events";
+import { compare, orderBoard } from "./board-order";
 
 type Result = { boardDetail: BoardDetail | null; needsRefetch: boolean };
-type Positioned = { id: string; position: string };
-
-function compare(a: string, b: string) {
-  return a < b ? -1 : a > b ? 1 : 0;
-}
-
-function byPosition(a: Positioned, b: Positioned) {
-  return compare(a.position, b.position) || compare(a.id, b.id);
-}
-
-function order(board: BoardDetail): BoardDetail {
-  const columns = [...board.columns].sort(byPosition);
-  const indices = new Map(columns.map(({ id }, index) => [id, index]));
-  const cards = [...board.cards].sort(
-    (a, b) =>
-      (indices.get(a.columnId) ?? Infinity) -
-        (indices.get(b.columnId) ?? Infinity) || byPosition(a, b),
-  );
-  return { ...board, columns, cards };
-}
-
 function equal<T extends object>(a: T, b: T) {
   return (
     Object.keys(a).length === Object.keys(b).length &&
@@ -90,7 +70,7 @@ export function applyBoardEvent(
         column,
         () =>
           applied(
-            order({
+            orderBoard({
               ...boardDetail,
               columns: [
                 ...boardDetail.columns.filter(({ id }) => id !== column.id),
@@ -122,7 +102,7 @@ export function applyBoardEvent(
           if (!boardDetail.columns.some(({ id }) => id === card.columnId))
             return refetch;
           return applied(
-            order({
+            orderBoard({
               ...boardDetail,
               cards: [
                 ...boardDetail.cards.filter(({ id }) => id !== card.id),

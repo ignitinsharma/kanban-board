@@ -11,6 +11,8 @@ import {
   type BoardMutation,
 } from "./apply-mutation";
 
+import { commitCardMove, type MoveInput } from "./move-card";
+
 export type MutationScope = { boardId: string; actorId: string };
 
 function useBoardMutation<Input>(
@@ -99,4 +101,17 @@ export function useAddMember(scope: MutationScope) {
       { method: "POST", body: { email } },
     ),
   }));
+}
+
+export function useMoveCard({ boardId, actorId }: MutationScope) {
+  const query = useQueryClient();
+  return useMutation({
+    mutationFn: (input: MoveInput) =>
+      commitCardMove(query, boardId, actorId, input, () =>
+        apiClient<Card>(`/api/cards/${input.id}/move`, {
+          method: "PATCH",
+          body: input.drop,
+        }),
+      ),
+  });
 }

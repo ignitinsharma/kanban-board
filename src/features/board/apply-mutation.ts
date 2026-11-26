@@ -8,6 +8,7 @@ import { boardDetailQuery } from "./board-query";
 type MutationType =
   | "card.created"
   | "card.updated"
+  | "card.moved"
   | "card.deleted"
   | "column.created"
   | "column.updated"
@@ -50,7 +51,9 @@ export async function applyMutation(
     }
     const result = applyBoardEvent(current, event);
     needsRefetch = result.needsRefetch;
-    return result.boardDetail ?? undefined;
+    return result.boardDetail === current
+      ? undefined
+      : (result.boardDetail ?? undefined);
   });
 
   if (needsRefetch)
