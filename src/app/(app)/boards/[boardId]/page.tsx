@@ -1,4 +1,7 @@
-import { notFound } from "next/navigation";
+import { cookies } from "next/headers";
+import { getSessionUser } from "@/server/security/auth";
+import { sessionCookieName } from "@/server/security/session-cookie";
+import { notFound, redirect } from "next/navigation";
 import { BoardView } from "@/features/board/board-view";
 import { idSchema } from "@/shared/kanban";
 
@@ -9,5 +12,9 @@ export default async function BoardPage({
 }) {
   const id = idSchema.safeParse((await params).boardId);
   if (!id.success) notFound();
-  return <BoardView key={id.data} boardId={id.data} />;
+  const user = await getSessionUser(
+    (await cookies()).get(sessionCookieName)?.value,
+  );
+  if (!user) redirect("/login");
+  return <BoardView key={id.data} boardId={id.data} actorId={user.id} />;
 }

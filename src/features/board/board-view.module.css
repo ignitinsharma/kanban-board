@@ -59,23 +59,8 @@
   background: var(--color-subtle);
   gap: var(--space-3);
 }
-.columnHeading {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  gap: var(--space-2);
-  padding-inline: var(--space-1);
-}
-.columnHeading h2 {
-  overflow-wrap: anywhere;
-}
-.count {
-  color: var(--color-text-muted);
-  font-size: var(--type-xs);
-  font-variant-numeric: tabular-nums;
-  font-weight: 600;
-}
 .cards {
+  flex: 1;
   min-height: 0;
   overflow-y: auto;
   overscroll-behavior-y: contain;
@@ -84,13 +69,34 @@
   margin: 0;
 }
 .card {
+  display: block;
+  width: 100%;
+  text-align: left;
+  color: var(--color-text);
+  cursor: pointer;
   padding: var(--space-3);
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
   background: var(--color-surface);
 }
-.card + .card {
+.cards li + li {
   margin-top: var(--space-2);
+}
+.card:hover {
+  border-color: var(--color-control-border);
+}
+.card:active {
+  background: var(--color-canvas);
+}
+.card:focus-visible {
+  outline-offset: -2px;
+}
+.headerActions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  justify-content: flex-end;
 }
 .cardTitle {
   font-weight: 600;

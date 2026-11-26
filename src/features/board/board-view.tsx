@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { memo, useEffect, useMemo, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useState } from "react";
 import { Avatar } from "@/components/avatar";
 import { Badge } from "@/components/badge";
 import { Button } from "@/components/button";
@@ -12,6 +12,9 @@ import { Skeleton } from "@/components/skeleton";
 import { ApiError, getClientId } from "@/lib/api-client";
 import type { BoardDetail, Card } from "@/shared/board";
 import { useBoard } from "./board-hooks";
+import { CardDetailDialog } from "./card-detail-dialog";
+import { AddCard, AddColumn, ColumnHeader } from "./column-management";
+import { MembersDialog } from "./members-dialog";
 import { groupCardsByColumn } from "./group-cards";
 import { useBoardEvents } from "./use-board-events";
 import styles from "./board-view.module.css";
@@ -19,26 +22,40 @@ import styles from "./board-view.module.css";
 const emptyCards: readonly Card[] = [];
 
 const CardTile = memo(function CardTile({
+  id,
   title,
   priority,
   assignee,
+  onOpen,
 }: {
+  id: string;
   title: string;
   priority: Card["priority"];
   assignee?: string;
+  onOpen: (id: string) => void;
 }) {
   return (
-    <li className={styles.card}>
-      <p className={styles.cardTitle}>{title}</p>
-      <div className={styles.cardMeta}>
-        <Badge priority={priority} />
-        {assignee && <Avatar name={assignee} />}
-      </div>
+    <li>
+      <button type="button" className={styles.card} onClick={() => onOpen(id)}>
+        <span className={styles.cardTitle}>{title}</span>
+        <span className={styles.cardMeta}>
+          <Badge priority={priority} />
+          {assignee && <Avatar name={assignee} />}
+        </span>
+      </button>
     </li>
   );
 });
 
-function BoardColumns({ detail }: { detail: BoardDetail }) {
+const BoardColumns = memo(function BoardColumns({
+  detail,
+  actorId,
+  onOpen,
+}: {
+  detail: BoardDetail;
+  actorId: string;
+  onOpen: (id: string) => void;
+}) {
   const grouped = useMemo(
     () => groupCardsByColumn(detail.cards),
     [detail.cards],
@@ -47,13 +64,6 @@ function BoardColumns({ detail }: { detail: BoardDetail }) {
     () => new Map(detail.members.map(({ id, name }) => [id, name])),
     [detail.members],
   );
-  if (!detail.columns.length)
-    return (
-      <div className={styles.feedback}>
-        <EmptyState title="No columns yet" />
-      </div>
-    );
-
   return (
     <div
       className={styles.columns}
@@ -69,15 +79,12 @@ function BoardColumns({ detail }: { detail: BoardDetail }) {
             key={column.id}
             aria-labelledby={`column-${column.id}`}
           >
-            <header className={styles.columnHeading}>
-              <h2 id={`column-${column.id}`}>{column.name}</h2>
-              <span
-                className={styles.count}
-                aria-label={`${cards.length} cards`}
-              >
-                {cards.length}
-              </span>
-            </header>
+            <ColumnHeader
+              boardId={detail.id}
+              actorId={actorId}
+              column={column}
+              count={cards.length}
+            />
             <ul
               className={styles.cards}
               tabIndex={0}
@@ -87,6 +94,8 @@ function BoardColumns({ detail }: { detail: BoardDetail }) {
                 cards.map((card) => (
                   <CardTile
                     key={card.id}
+                    id={card.id}
+                    onOpen={onOpen}
                     title={card.title}
                     priority={card.priority}
                     assignee={
@@ -98,20 +107,41 @@ function BoardColumns({ detail }: { detail: BoardDetail }) {
                 <li className={styles.emptyColumn}>No cards</li>
               )}
             </ul>
+            <AddCard
+              boardId={detail.id}
+              actorId={actorId}
+              columnId={column.id}
+            />
           </section>
         );
       })}
+      <AddColumn
+        boardId={detail.id}
+        actorId={actorId}
+        atLimit={detail.columns.length >= 12}
+      />
     </div>
   );
-}
+});
 
-export function BoardView({ boardId }: { boardId: string }) {
+export function BoardView({
+  boardId,
+  actorId,
+}: {
+  boardId: string;
+  actorId: string;
+}) {
   const router = useRouter();
   const board = useBoard(boardId);
   const [clientId] = useState(() =>
     typeof window === "undefined" ? "" : getClientId(),
   );
   const [retry, setRetry] = useState(0);
+  const [selected, openCard] = useState<string>();
+  const [membersOpen, setMembersOpen] = useState(false);
+  const showCard = useCallback((id: string) => openCard(id), []);
+  const closeCard = useCallback(() => openCard(undefined), []);
+  const closeMembers = useCallback(() => setMembersOpen(false), []);
   const state = useBoardEvents(boardId, clientId, {
     onUnauthorized: () => router.replace("/login"),
     retry,
@@ -133,7 +163,12 @@ export function BoardView({ boardId }: { boardId: string }) {
           </Link>
           <h1>{board.data?.name ?? "Board"}</h1>
         </div>
-        <ConnectionIndicator state={state} />
+        <div className={styles.headerActions}>
+          <ConnectionIndicator state={state} />
+          {board.data && (
+            <Button onClick={() => setMembersOpen(true)}>Members</Button>
+          )}
+        </div>
       </header>
       {removed ? (
         <div className={styles.feedback}>
@@ -169,7 +204,29 @@ export function BoardView({ boardId }: { boardId: string }) {
           />
         </div>
       ) : (
-        board.data && <BoardColumns detail={board.data} />
+        board.data && (
+          <BoardColumns
+            detail={board.data}
+            actorId={actorId}
+            onOpen={showCard}
+          />
+        )
+      )}
+      {selected && (
+        <CardDetailDialog
+          key={selected}
+          id={selected}
+          boardId={boardId}
+          actorId={actorId}
+          onClose={closeCard}
+        />
+      )}
+      {membersOpen && (
+        <MembersDialog
+          boardId={boardId}
+          actorId={actorId}
+          onClose={closeMembers}
+        />
       )}
     </main>
   );

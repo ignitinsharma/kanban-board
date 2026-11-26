@@ -13,8 +13,8 @@ export function useBoards() {
   });
 }
 
-export function useBoard(boardId: string) {
-  return useQuery(boardDetailQuery(boardId));
+export function useBoard(boardId: string, { enabled = true } = {}) {
+  return useQuery({ ...boardDetailQuery(boardId), enabled });
 }
 
 export function useCreateBoard() {
