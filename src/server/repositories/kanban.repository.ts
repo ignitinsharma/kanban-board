@@ -1,3 +1,4 @@
+import type { ActivityEntry } from "@/shared/activity";
 import type { Board, BoardMember, Card, Column } from "@/shared/board";
 import type { ActivityAction } from "@/shared/kanban";
 import { getPrisma } from "../db/prisma";
@@ -190,6 +191,42 @@ export function createRepositories(db: Database) {
       },
     },
     activity: {
+      async list(
+        boardId: string,
+        take: number,
+        cursor?: { createdAt: Date; id: string },
+      ): Promise<ActivityEntry[]> {
+        const rows = await db.activityLog.findMany({
+          where: {
+            boardId,
+            ...(cursor && {
+              OR: [
+                { createdAt: { lt: cursor.createdAt } },
+                { createdAt: cursor.createdAt, id: { lt: cursor.id } },
+              ],
+            }),
+          },
+          orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+          take,
+          select: {
+            id: true,
+            action: true,
+            createdAt: true,
+            cardId: true,
+            columnId: true,
+            metadata: true,
+            actor: { select: { id: true, name: true } },
+          },
+        });
+        return rows.map(({ createdAt, metadata, ...row }) => ({
+          ...row,
+          createdAt: createdAt.toISOString(),
+          metadata:
+            metadata && typeof metadata === "object" && !Array.isArray(metadata)
+              ? metadata
+              : {},
+        }));
+      },
       async write(data: ActivityInput) {
         await db.activityLog.create({ data });
       },
