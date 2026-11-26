@@ -1,0 +1,19 @@
+/* TODO: Replace these neutral placeholders when DESIGN.md is available. */
+:root {
+  --color-background: #fafafa;
+  --color-surface: #ffffff;
+  --color-text: #222222;
+  --color-border: #dedede;
+  --color-accent: #315ea8;
+  --spacing-1: 4px;
+  --spacing-2: 8px;
+  --spacing-3: 16px;
+  --radius: 4px;
+  --font-family: system-ui, sans-serif;
+}
+
+body {
+  background: var(--color-background);
+  color: var(--color-text);
+  font-family: var(--font-family);
+}
