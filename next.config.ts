@@ -10,5 +10,5 @@ export default async function configure(phase: string): Promise<NextConfig> {
     getEnv();
   }
 
-  return {};
+  return { agentRules: false };
 }
