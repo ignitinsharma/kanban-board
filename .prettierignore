@@ -1,0 +1,5 @@
+.next/
+coverage/
+prisma/generated/
+package-lock.json
+next-env.d.ts
