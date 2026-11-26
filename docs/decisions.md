@@ -91,3 +91,7 @@ require a shared store implementing the limiter interface. On Render,
 the application trusts the Cloudflare ingress to overwrite
 CF-Connecting-IP and assumes the service is reachable only through that
 ingress. Requests without a trusted IP share a fallback bucket.
+
+Registration returns 409 for an existing email. We accept account
+enumeration on registration for clearer feedback. Login returns the same
+generic 401 for unknown emails and wrong passwords.

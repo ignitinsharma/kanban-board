@@ -59,7 +59,9 @@ describe.skipIf(!connectionString)("auth routes with PostgreSQL", () => {
       new Request(`${origin}/api/auth/me`, { headers: { Cookie: cookie } }),
     );
     expect(current.status).toBe(200);
-    expect(await current.json()).toEqual(user);
+    const body = await current.json();
+    expect(Object.keys(body).sort()).toEqual(["email", "id", "name"]);
+    expect(body).toEqual(user);
     const loggedOut = await logout(post("logout"));
     expect(loggedOut.status).toBe(204);
     expect(loggedOut.headers.get("set-cookie")).toMatch(/Max-Age=0/i);
