@@ -110,3 +110,29 @@ Expect 400 for invalid input, 401 for missing authentication, 404 for
 missing or inaccessible resources, 409 for conflicts and limits, and
 422 for invalid assignments or move destinations. A member who tries
 to delete a board they do not own receives 403.
+
+### Board events
+
+`GET /api/boards/[boardId]/events` opens a same-origin Server-Sent Events
+stream for board members. It uses the session cookie. Missing and
+inaccessible boards return 404. There are at most three streams per user
+and 100 per Node process. At capacity, the endpoint returns 429 with
+`Retry-After: 10`.
+
+The stream sends typed board events and a comment every 15 seconds.
+The client fetches the latest board detail on each connection. The
+stream expires with the session and rotates after 55 minutes.
+Membership is rechecked before event delivery and during idle streams.
+The external `/api/health` pinger remains necessary on Render Free for an
+always-warm demo because outbound heartbeats do not count as inbound traffic.
+
+For a streaming smoke test, use `npm run build` and `npm start`, then open
+the endpoint with `curl -N` and a throwaway user's session cookie. Pass the
+cookie through local curl configuration and keep it out of terminal
+output. Confirm an immediate connection comment, two distinct heartbeat
+frames, and a named event after a mutation. Repeat with `--compressed`
+and on Render to verify that ingress delivers frames incrementally.
+
+Board event delivery and stream limits are local to one Node process.
+Scaling out requires a shared EventBus implementation such as Redis
+pub/sub or PostgreSQL LISTEN/NOTIFY and shared accounting for a global cap.

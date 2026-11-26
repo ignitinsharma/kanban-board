@@ -127,3 +127,29 @@ request. An optional `X-Client-Id` UUID is included as
 `originClientId` so subscribers can recognize their own changes.
 Absent or invalid values become null. This header carries no
 authorization information. The bus is in memory and scoped by board.
+
+## ADR 014 · Board event streams and reconnect recovery
+
+A dynamic Node Route Handler streams board-scoped events with SSE.
+Cookie authentication and board membership gate admission. Every
+protected frame checks membership before delivery. An idle recheck
+runs every 60 seconds. The deletion signal contains only the board
+ID and terminates the subscription. Abort, cancellation, expiry,
+rotation, and slow consumers release the admission slot.
+
+Allow three concurrent streams per user and 100 per instance. Bound
+pending frames and the response buffer, and close slow consumers so
+they can recover via a snapshot. Send heartbeat comments every 15
+seconds to keep intermediaries active. Keep the external health
+pinger for Render Free. Rotate streams after 55 minutes or at session
+expiry, whichever comes first.
+
+Refresh the board snapshot on each successful connection. A replay
+buffer would require gap detection and still need snapshot recovery
+after a restart. The client applies ordered DTO updates to the detail
+cache and coalesces reconciliation fetches when state is uncertain.
+The bus is shared across route bundles within one process. Multiple
+instances would need shared pub/sub and deployment-wide accounting if
+the connection cap must apply across instances. PostgreSQL
+LISTEN/NOTIFY would use a dedicated direct connection and compact
+notifications or event references.
