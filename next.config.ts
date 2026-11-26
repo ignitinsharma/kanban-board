@@ -6,7 +6,8 @@ import {
 
 export default async function configure(phase: string): Promise<NextConfig> {
   if (phase === PHASE_DEVELOPMENT_SERVER || phase === PHASE_PRODUCTION_SERVER) {
-    await import("./src/server/config/env.ts");
+    const { getEnv } = await import("./src/server/config/env.ts");
+    getEnv();
   }
 
   return {};
