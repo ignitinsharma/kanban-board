@@ -160,3 +160,11 @@ query hooks live in `src/features`. The UI uses CSS Modules and
 shared variables in `src/styles/tokens.css`. Change
 `--color-accent` in that file to update the primary accent.
 Verify its contrast against `--color-accent-text` after changing it.
+
+Drag a card from its body, or hold briefly on touch before moving it.
+With a keyboard, focus the card's Reorder button, then press Space.
+Use the arrow keys to move, Space to drop, or Escape to cancel.
+The drag preview is local. Dropping applies one optimistic move
+and sends the destination neighbors to the server. The response and
+SSE echo use the same reducer. A failed move restores its previous
+position when it is still safe, and a stale drop refreshes the board.
