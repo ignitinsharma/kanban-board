@@ -1,0 +1,29 @@
+services:
+  - type: web
+    name: kanban-board
+    runtime: node
+    plan: free
+    # Match Neon AWS US West (Oregon). Choose both regions before creating the service.
+    region: oregon
+    branch: main
+    autoDeployTrigger: commit
+    # Render Free has no pre-deploy command.
+    buildCommand: >-
+      test -n "$DATABASE_URL_UNPOOLED" &&
+      npm ci --include=dev &&
+      npm run db:generate &&
+      npx --no-install prisma migrate deploy --config prisma.config.ts &&
+      npx --no-install next build
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NODE_VERSION
+        value: "24"
+      - key: DATABASE_URL
+        sync: false
+      - key: DATABASE_URL_UNPOOLED
+        sync: false
+      - key: JWT_SECRET
+        sync: false
