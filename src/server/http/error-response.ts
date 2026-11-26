@@ -1,11 +1,17 @@
 import { ZodError } from "zod";
-import { AppError } from "./errors";
+import { AppError, RateLimitError } from "./errors";
 
 export function errorToResponse(error: unknown): Response {
   if (error instanceof AppError && error.status < 500) {
     return Response.json(
       { error: { code: error.code, message: error.message } },
-      { status: error.status },
+      {
+        status: error.status,
+        headers:
+          error instanceof RateLimitError
+            ? { "Retry-After": String(error.retryAfter) }
+            : undefined,
+      },
     );
   }
 
