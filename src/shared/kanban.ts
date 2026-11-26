@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { sanitizeText } from "./sanitize";
 
 export const cardPrioritySchema = z.enum(["LOW", "MEDIUM", "HIGH", "URGENT"]);
 
@@ -20,13 +21,20 @@ export type ActivityAction = z.infer<typeof activityActionSchema>;
 export const idSchema = z.uuid();
 export const emailSchema = z
   .string()
-  .trim()
+  .transform((value) => sanitizeText(value, true))
   .pipe(z.email())
   .transform((email) => email.toLowerCase());
-export const nameSchema = z.string().trim().min(1).max(100);
-export const titleSchema = z.string().trim().min(1).max(200);
+export const nameSchema = z
+  .string()
+  .transform((value) => sanitizeText(value, true))
+  .pipe(z.string().min(1).max(100));
+export const titleSchema = z
+  .string()
+  .transform((value) => sanitizeText(value, true))
+  .pipe(z.string().min(1).max(200));
 
 export const boardInputSchema = z.strictObject({ name: nameSchema });
+export const boardUpdateSchema = boardInputSchema;
 export const columnInputSchema = z.strictObject({ name: nameSchema });
 export const memberAddSchema = z.strictObject({ email: emailSchema });
 
@@ -34,8 +42,8 @@ const cardFieldsSchema = z.strictObject({
   title: titleSchema,
   description: z
     .string()
-    .trim()
-    .max(5000)
+    .transform((value) => sanitizeText(value))
+    .pipe(z.string().max(5000))
     .transform((value) => value || null)
     .nullable()
     .optional(),
@@ -56,7 +64,10 @@ export const cardMoveSchema = reorderSchema.extend({ columnId: idSchema });
 export const cardFiltersSchema = z.strictObject({
   assigneeId: idSchema.optional(),
   priority: cardPrioritySchema.optional(),
-  q: z.string().trim().optional(),
+  q: z
+    .string()
+    .transform((value) => sanitizeText(value))
+    .optional(),
 });
 
 export const activityCursorSchema = z.strictObject({
