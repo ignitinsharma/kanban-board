@@ -49,13 +49,17 @@ export class MemoryRateLimiter implements RateLimiter {
 }
 
 export function getClientIp(request: Request) {
-  // Trust this header only on Render, where the Cloudflare ingress overwrites
-  // it with the visitor IP. Deploy this service without a bypass to that ingress.
-  const ip =
-    process.env.RENDER === "true"
-      ? request.headers.get("cf-connecting-ip")
-      : null;
-  return ip && isIP(ip) ? ip : "unknown";
+  if (process.env.RENDER !== "true") return "unknown";
+
+  // Cloudflare overwrites CF-Connecting-IP on public Render ingress.
+  const connectingIp = request.headers.get("cf-connecting-ip");
+  if (connectingIp && isIP(connectingIp)) return connectingIp;
+
+  // The ingress appends the visitor address. Earlier entries may be supplied
+  // by the caller. Never walk backward if the final entry is invalid.
+  const forwarded = request.headers.get("x-forwarded-for");
+  const lastIp = forwarded?.slice(forwarded.lastIndexOf(",") + 1).trim();
+  return lastIp && isIP(lastIp) ? lastIp : "unknown";
 }
 
 export const authRateLimiter: RateLimiter = new MemoryRateLimiter();

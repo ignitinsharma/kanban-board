@@ -323,3 +323,14 @@ commit or rollback, when Postgres releases the locks.
 On SIGTERM the app ends open SSE responses and releases admission slots.
 Next.js handles HTTP shutdown and process exit. A reconnect fetches the
 latest board snapshot.
+
+
+## Render client IP fallback
+
+Render’s public Cloudflare ingress overwrites `CF-Connecting-IP` and
+appends to `X-Forwarded-For`. With `RENDER=true`, prefer a valid
+`CF-Connecting-IP` and use only the final forwarded address as fallback.
+A malformed final entry falls back to the shared bucket. Earlier entries
+may come from the caller. Outside Render both headers are ignored.
+This assumes the service receives traffic exclusively through Render’s
+public ingress. [Render’s trusted proxy guidance](https://render.com/articles/host-pocketbase-on-render)

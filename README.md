@@ -127,7 +127,7 @@ Rotating it invalidates existing sessions.
 ## Testing
 
 Run `npm run lint`, `npm run typecheck`, `npm test`, and `npm run build`.
-The full suite contains 115 tests. Without `TEST_DATABASE_URL`, Vitest skips
+The full suite contains 122 tests. Without `TEST_DATABASE_URL`, Vitest skips
 Postgres integration tests. Units cover contracts, auth, ordering, cache
 updates, activity formatting, SSE cleanup, and request limits. Postgres
 tests cover authentication, authorization, migrations, transactions,
@@ -227,8 +227,10 @@ uncached. The JSON reader caps bodies at 64 KiB and 32 nested containers.
 Authenticated users can make 120 mutations and 600 reads per minute.
 Login allows ten attempts per IP and IP/email pair in 15 minutes.
 Registration allows five attempts per IP each hour. Render sets
-`RENDER=true`, which enables client IP extraction from `CF-Connecting-IP`.
-That assumes all requests enter through Render’s trusted ingress.
+`RENDER=true`, which enables client IP extraction from `CF-Connecting-IP`. The
+fallback checks only the final address appended to `X-Forwarded-For`.
+Requests without a valid trusted address share a fallback bucket.
+This assumes all requests enter through [Render’s public ingress](https://render.com/articles/host-pocketbase-on-render).
 
 ## Performance
 Measured on a 150-card board in headless Chrome using the local
