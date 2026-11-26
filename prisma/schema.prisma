@@ -6,3 +6,114 @@ generator client {
 datasource db {
   provider = "postgresql"
 }
+
+enum CardPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum ActivityAction {
+  CARD_CREATED
+  CARD_UPDATED
+  CARD_MOVED
+  CARD_DELETED
+  COLUMN_CREATED
+  COLUMN_RENAMED
+  COLUMN_DELETED
+  COLUMN_REORDERED
+  MEMBER_ADDED
+}
+
+model User {
+  id            String        @id @default(uuid()) @db.Uuid
+  email         String        @unique
+  passwordHash  String
+  name          String
+  createdAt     DateTime      @default(now()) @db.Timestamptz(3)
+  updatedAt     DateTime      @updatedAt @db.Timestamptz(3)
+  ownedBoards   Board[]
+  memberships   BoardMember[]
+  assignedCards Card[]
+  activities    ActivityLog[]
+}
+
+model Board {
+  id         String        @id @default(uuid()) @db.Uuid
+  name       String
+  ownerId    String        @db.Uuid
+  createdAt  DateTime      @default(now()) @db.Timestamptz(3)
+  updatedAt  DateTime      @updatedAt @db.Timestamptz(3)
+  owner      User          @relation(fields: [ownerId], references: [id], onDelete: Restrict)
+  members    BoardMember[]
+  columns    Column[]
+  cards      Card[]
+  activities ActivityLog[]
+}
+
+model BoardMember {
+  boardId   String   @db.Uuid
+  userId    String   @db.Uuid
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
+  board     Board    @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([boardId, userId])
+  @@index([userId])
+}
+
+model Column {
+  id         String        @id @default(uuid()) @db.Uuid
+  boardId    String        @db.Uuid
+  name       String
+  position   String        @db.Text
+  createdAt  DateTime      @default(now()) @db.Timestamptz(3)
+  updatedAt  DateTime      @updatedAt @db.Timestamptz(3)
+  board      Board         @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  cards      Card[]
+  activities ActivityLog[]
+
+  @@unique([boardId, position])
+}
+
+model Card {
+  id          String        @id @default(uuid()) @db.Uuid
+  boardId     String        @db.Uuid
+  columnId    String        @db.Uuid
+  title       String
+  description String?
+  priority    CardPriority  @default(MEDIUM)
+  assigneeId  String?       @db.Uuid
+  position    String        @db.Text
+  createdAt   DateTime      @default(now()) @db.Timestamptz(3)
+  updatedAt   DateTime      @updatedAt @db.Timestamptz(3)
+  board       Board         @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  column      Column        @relation(fields: [columnId], references: [id], onDelete: Cascade)
+  assignee    User?         @relation(fields: [assigneeId], references: [id], onDelete: SetNull)
+  activities  ActivityLog[]
+
+  @@unique([columnId, position])
+  @@index([boardId, assigneeId])
+  @@index([boardId, priority])
+}
+
+model ActivityLog {
+  id        String         @id @default(uuid()) @db.Uuid
+  boardId   String         @db.Uuid
+  actorId   String         @db.Uuid
+  action    ActivityAction
+  cardId    String?        @db.Uuid
+  columnId  String?        @db.Uuid
+  metadata  Json           @db.JsonB
+  createdAt DateTime       @default(now()) @db.Timestamptz(3)
+  board     Board          @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  actor     User           @relation(fields: [actorId], references: [id], onDelete: Restrict)
+  card      Card?          @relation(fields: [cardId], references: [id], onDelete: SetNull)
+  column    Column?        @relation(fields: [columnId], references: [id], onDelete: SetNull)
+
+  @@index([boardId, createdAt(sort: Desc), id(sort: Desc)])
+  @@index([cardId])
+  @@index([columnId])
+}
