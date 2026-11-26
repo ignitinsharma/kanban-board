@@ -10,6 +10,7 @@ import {
   useSensor,
   useSensors,
   type Announcements,
+  type DragCancelEvent,
   type DragEndEvent,
   type DragOverEvent,
   type DragStartEvent,
@@ -19,7 +20,15 @@ import {
   sortableKeyboardCoordinates,
 } from "@dnd-kit/sortable";
 import { useQueryClient } from "@tanstack/react-query";
-import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  memo,
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { InlineError } from "@/components/inline-error";
 import { ApiError } from "@/lib/api-client";
 import type { BoardDetail, Card, Column } from "@/shared/board";
@@ -41,9 +50,11 @@ import {
   cardCollisions,
   columnTarget,
 } from "./drag-sensors";
+import { unfilteredBoard, type FilteredBoard } from "./filter-logic";
 import { CardVisual, SortableCard } from "./sortable-card";
 import styles from "./board-view.module.css";
 
+const noSensors: ReturnType<typeof useSensors> = [];
 const previewStrategy = () => null;
 const measuring = { droppable: { strategy: MeasuringStrategy.Always } };
 const pointerOptions = { activationConstraint: { distance: 6 } };
@@ -56,6 +67,7 @@ const instructions = {
 
 type Drag = {
   id: string;
+  epoch: number;
   base: BoardDetail;
   items: PreviewItems;
   original: Drop;
@@ -67,6 +79,9 @@ const SortableColumn = memo(function SortableColumn({
   actorId,
   column,
   ids,
+  total,
+  dragEnabled,
+  onCardCreated,
   touchDrag,
   cards,
   names,
@@ -77,13 +92,19 @@ const SortableColumn = memo(function SortableColumn({
   actorId: string;
   column: Column;
   ids: readonly string[];
+  total: number;
+  dragEnabled: boolean;
+  onCardCreated: (card: Card) => void;
   touchDrag?: Drag;
   cards: Map<string, Card>;
   names: Map<string, string>;
   pending: ReadonlySet<string>;
   onOpen: (id: string) => void;
 }) {
-  const { setNodeRef, isOver } = useDroppable({ id: columnTarget(column.id) });
+  const { setNodeRef, isOver } = useDroppable({
+    id: columnTarget(column.id),
+    disabled: !dragEnabled,
+  });
   // TouchSensor follows the original DOM target, even when its preview slot moves.
   const renderIds = useMemo(() => {
     if (!touchDrag?.touch) return ids;
@@ -102,6 +123,7 @@ const SortableColumn = memo(function SortableColumn({
         actorId={actorId}
         column={column}
         count={ids.length}
+        total={dragEnabled ? undefined : total}
       />
       <SortableContext
         id={column.id}
@@ -136,16 +158,26 @@ const SortableColumn = memo(function SortableColumn({
                     card.assigneeId ? names.get(card.assigneeId) : undefined
                   }
                   pending={pending.has(id)}
+                  dragEnabled={dragEnabled}
                   anchor={touchDrag?.id === id}
                   onOpen={onOpen}
                 />
               )
             );
           })}
-          {!ids.length && <li className={styles.emptyColumn}>No cards</li>}
+          {!ids.length && (
+            <li className={styles.emptyColumn}>
+              {total && !dragEnabled ? "No matching cards" : "No cards"}
+            </li>
+          )}
         </ul>
       </SortableContext>
-      <AddCard boardId={boardId} actorId={actorId} columnId={column.id} />
+      <AddCard
+        boardId={boardId}
+        actorId={actorId}
+        columnId={column.id}
+        onCreated={onCardCreated}
+      />
     </section>
   );
 });
@@ -184,9 +216,15 @@ export const DragBoard = memo(function DragBoard({
   detail,
   actorId,
   onOpen,
+  filtered,
+  dragEnabled,
+  onCardCreated,
 }: {
   detail: BoardDetail;
   actorId: string;
+  filtered: FilteredBoard;
+  dragEnabled: boolean;
+  onCardCreated: (card: Card) => void;
   onOpen: (id: string) => void;
 }) {
   const query = useQueryClient();
@@ -194,6 +232,7 @@ export const DragBoard = memo(function DragBoard({
   const queryKey = useMemo(() => boardDetailQuery(boardId).queryKey, [boardId]);
   const { mutateAsync } = useMoveCard({ boardId, actorId });
   const [drag, setDrag] = useState<Drag>();
+  const [epoch, setEpoch] = useState(0);
   const current = useRef<Drag | undefined>(undefined);
   const [pending, setPending] = useState<ReadonlySet<string>>(() => new Set());
   const pendingIds = useRef(new Set<string>());
@@ -204,12 +243,19 @@ export const DragBoard = memo(function DragBoard({
     useSensor(TouchSensor, touchOptions),
     useSensor(KeyboardSensor, keyboardOptions),
   );
-  const originalItems = useMemo(() => buildItems(detail), [detail]);
+  const originalItems = unfilteredBoard(detail).items;
   const preview = useMemo(
     () => drag && currentPreview(drag, detail, originalItems),
     [drag, detail, originalItems],
   );
-  const items = preview || originalItems;
+  // Replacing the context discards dnd-kit's active interaction without a
+  // synthetic key event. Late callbacks from the previous context are ignored.
+  if (drag && (!dragEnabled || preview === null)) {
+    setDrag(undefined);
+    setEpoch((value) => value + 1);
+  }
+
+  const items = dragEnabled ? preview || originalItems : filtered.items;
   const cards = useMemo(
     () => new Map(detail.cards.map((card) => [card.id, card])),
     [detail.cards],
@@ -234,23 +280,23 @@ export const DragBoard = memo(function DragBoard({
     setDrag(undefined);
   }, []);
 
-  useEffect(() => {
-    if (drag && preview === null) {
-      document.dispatchEvent(
-        new KeyboardEvent("keydown", {
-          key: "Escape",
-          code: "Escape",
-          bubbles: true,
-        }),
-      );
-    }
-  }, [drag, preview]);
+  useLayoutEffect(() => {
+    current.current = undefined;
+  }, [epoch]);
+
+  const cancel = useCallback(
+    ({ active }: DragCancelEvent) => {
+      if (current.current?.epoch === epoch && current.current.id === active.id)
+        clear();
+    },
+    [clear, epoch],
+  );
 
   const start = useCallback(
     ({ active, activatorEvent }: DragStartEvent) => {
       const id = String(active.id);
       const base = query.getQueryData<BoardDetail>(queryKey);
-      if (!base || pendingIds.current.has(id)) return;
+      if (!dragEnabled || !base || pendingIds.current.has(id)) return;
       const items = buildItems(base);
       const original = computeDrop(items, id);
       if (!original) return;
@@ -261,19 +307,27 @@ export const DragBoard = memo(function DragBoard({
               height: active.rect.current.initial?.height ?? 60,
             }
           : null;
-      const next = { id, items, base, original, touch };
+      const next = { id, epoch, items, base, original, touch };
       current.current = next;
       setNotice("");
       setDrag(next);
     },
-    [query, queryKey],
+    [dragEnabled, epoch, query, queryKey],
   );
 
   const over = useCallback(
     ({ active, over, collisions }: DragOverEvent) => {
       const drag = current.current;
       const base = query.getQueryData<BoardDetail>(queryKey);
-      if (!drag || !base || !over || active.id === over.id) return;
+      if (
+        !dragEnabled ||
+        !drag ||
+        drag.epoch !== epoch ||
+        !base ||
+        !over ||
+        active.id === over.id
+      )
+        return;
       const items = currentPreview(
         drag,
         base,
@@ -301,14 +355,15 @@ export const DragBoard = memo(function DragBoard({
       current.current = updated;
       setDrag(updated);
     },
-    [query, queryKey],
+    [dragEnabled, epoch, query, queryKey],
   );
 
   const end = useCallback(
-    ({ over }: DragEndEvent) => {
+    ({ active, over }: DragEndEvent) => {
       const drag = current.current;
       const base = query.getQueryData<BoardDetail>(queryKey);
-      if (!drag || !base || !over) return clear();
+      if (!drag || drag.epoch !== epoch || drag.id !== active.id) return;
+      if (!dragEnabled || !base || !over) return clear();
       const latest = currentPreview(
         drag,
         base,
@@ -341,7 +396,7 @@ export const DragBoard = memo(function DragBoard({
           setPending(new Set(pendingIds.current));
         });
     },
-    [clear, mutateAsync, query, queryKey],
+    [clear, dragEnabled, epoch, mutateAsync, query, queryKey],
   );
 
   const announcements = useMemo<Announcements>(() => {
@@ -386,13 +441,14 @@ export const DragBoard = memo(function DragBoard({
         </div>
       )}
       <DndContext
-        sensors={sensors}
+        key={epoch}
+        sensors={dragEnabled ? sensors : noSensors}
         collisionDetection={cardCollisions}
         measuring={measuring}
         onDragStart={start}
         onDragOver={over}
         onDragEnd={end}
-        onDragCancel={clear}
+        onDragCancel={cancel}
         accessibility={accessibility}
       >
         <div
@@ -408,6 +464,9 @@ export const DragBoard = memo(function DragBoard({
               actorId={actorId}
               column={column}
               ids={items[column.id]}
+              total={filtered.byColumn[column.id].total}
+              dragEnabled={dragEnabled}
+              onCardCreated={onCardCreated}
               touchDrag={
                 touchDrag &&
                 (items[column.id].includes(touchDrag.id) ||

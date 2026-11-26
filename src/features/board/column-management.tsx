@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Button } from "@/components/button";
 import { Dialog } from "@/components/dialog";
 import { InlineError } from "@/components/inline-error";
-import type { Column } from "@/shared/board";
+import type { Card, Column } from "@/shared/board";
 import { InlineComposer } from "./inline-composer";
 import {
   useCreateCard,
@@ -19,7 +19,8 @@ export function AddCard({
   boardId,
   actorId,
   columnId,
-}: MutationScope & { columnId: string }) {
+  onCreated,
+}: MutationScope & { columnId: string; onCreated: (card: Card) => void }) {
   const [open, setOpen] = useState(false);
   const add = useCreateCard({ boardId, actorId });
   return open ? (
@@ -33,7 +34,15 @@ export function AddCard({
         setOpen(false);
       }}
       onSubmit={(title) =>
-        add.mutate({ title, columnId }, { onSuccess: () => setOpen(false) })
+        add.mutate(
+          { title, columnId },
+          {
+            onSuccess: (result) => {
+              setOpen(false);
+              if (result.type === "card.created") onCreated(result.entity);
+            },
+          },
+        )
       }
     />
   ) : (
@@ -86,7 +95,8 @@ export function ColumnHeader({
   actorId,
   column,
   count,
-}: MutationScope & { column: Column; count: number }) {
+  total,
+}: MutationScope & { column: Column; count: number; total?: number }) {
   const [mode, setMode] = useState<"rename" | "delete">();
   const rename = useRenameColumn({ boardId, actorId });
   const remove = useDeleteColumn({ boardId, actorId });
@@ -95,8 +105,15 @@ export function ColumnHeader({
       <header className={styles.columnHeader}>
         <div className={styles.columnTitle}>
           <h2 id={`column-${column.id}`}>{column.name}</h2>
-          <span className={styles.count} aria-label={`${count} cards`}>
-            {count}
+          <span
+            className={styles.count}
+            aria-label={
+              total === undefined
+                ? `${count} cards`
+                : `${count} of ${total} cards`
+            }
+          >
+            {total === undefined ? count : `${count} / ${total}`}
           </span>
         </div>
         <div className={styles.tools}>

@@ -1,16 +1,32 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { Button } from "@/components/button";
 import { ConnectionIndicator } from "@/components/connection-indicator";
 import { EmptyState } from "@/components/empty-state";
 import { Skeleton } from "@/components/skeleton";
+import type { Card } from "@/shared/board";
 import { ApiError, getClientId } from "@/lib/api-client";
 import { useBoard } from "./board-hooks";
 import { CardDetailDialog } from "./card-detail-dialog";
 import { DragBoard } from "./drag-board";
+import { FilterToolbar } from "./filter-toolbar";
+import {
+  filterBoard,
+  hasActiveFilters,
+  matchesCard,
+  parseFilters,
+  searchTerms,
+} from "./filter-logic";
 import { MembersDialog } from "./members-dialog";
 import { useBoardEvents } from "./use-board-events";
 import styles from "./board-view.module.css";
@@ -24,6 +40,41 @@ export function BoardView({
 }) {
   const router = useRouter();
   const board = useBoard(boardId);
+  const params = useSearchParams();
+  const members = board.data?.members;
+  const memberIds = useMemo(
+    () => members && new Set(members.map(({ id }) => id)),
+    [members],
+  );
+  const { assignee, priority, q } = parseFilters(params, memberIds);
+  const filters = useMemo(
+    () => ({ assignee, priority, q }),
+    [assignee, priority, q],
+  );
+  const filtered = useMemo(
+    () => board.data && filterBoard(board.data, filters),
+    [board.data, filters],
+  );
+  const dragEnabled = !hasActiveFilters(filters);
+  const currentFilters = useRef(filters);
+  const [hiddenCardNotice, setHiddenCardNotice] = useState(0);
+
+  useLayoutEffect(() => {
+    currentFilters.current = filters;
+  }, [filters]);
+
+  const onCardCreated = useCallback((card: Card) => {
+    const current = currentFilters.current;
+    if (!matchesCard(card, current, searchTerms(current.q))) {
+      setHiddenCardNotice((count) => count + 1);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!hiddenCardNotice) return;
+    const timer = window.setTimeout(() => setHiddenCardNotice(0), 5000);
+    return () => window.clearTimeout(timer);
+  }, [hiddenCardNotice]);
   const [clientId] = useState(() =>
     typeof window === "undefined" ? "" : getClientId(),
   );
@@ -61,6 +112,19 @@ export function BoardView({
           )}
         </div>
       </header>
+      {board.data && filtered && !removed && (
+        <FilterToolbar
+          filters={filters}
+          members={board.data.members}
+          visible={filtered.counts.visible}
+          total={filtered.counts.total}
+        />
+      )}
+      {!removed && Boolean(hiddenCardNotice) && (
+        <p className={styles.filterNotice} role="status">
+          Card created. It is hidden by the current filters.
+        </p>
+      )}
       {removed ? (
         <div className={styles.feedback}>
           <EmptyState title="This board is no longer available" />
@@ -95,8 +159,16 @@ export function BoardView({
           />
         </div>
       ) : (
-        board.data && (
-          <DragBoard detail={board.data} actorId={actorId} onOpen={showCard} />
+        board.data &&
+        filtered && (
+          <DragBoard
+            detail={board.data}
+            actorId={actorId}
+            onOpen={showCard}
+            filtered={filtered}
+            dragEnabled={dragEnabled}
+            onCardCreated={onCardCreated}
+          />
         )
       )}
       {selected && (

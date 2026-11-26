@@ -34,6 +34,7 @@ export const SortableCard = memo(function SortableCard({
   priority,
   assignee,
   pending,
+  dragEnabled,
   anchor,
   onOpen,
 }: {
@@ -42,6 +43,7 @@ export const SortableCard = memo(function SortableCard({
   priority: Card["priority"];
   assignee?: string;
   pending: boolean;
+  dragEnabled: boolean;
   anchor: boolean;
   onOpen: (id: string) => void;
 }) {
@@ -54,7 +56,7 @@ export const SortableCard = memo(function SortableCard({
     transform,
   } = useSortable({
     id,
-    disabled: { draggable: pending, droppable: false },
+    disabled: { draggable: pending || !dragEnabled, droppable: !dragEnabled },
     transition: null,
   });
   return (
@@ -87,7 +89,7 @@ export const SortableCard = memo(function SortableCard({
         {...attributes}
         {...listeners}
         aria-label={`Reorder card: ${title}`}
-        disabled={pending}
+        disabled={pending || !dragEnabled}
       >
         <svg
           width="16"
