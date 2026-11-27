@@ -87,48 +87,52 @@ export function BoardsList({
         <ul className={styles.list}>
           {boards.data.map((board) => (
             <li key={board.id} className={styles.row}>
-              <div className={styles.details}>
-                <Link className={styles.name} href={`/boards/${board.id}`}>
-                  {board.name}
-                </Link>
+              <Link
+                className={styles.boardLink}
+                href={`/boards/${board.id}`}
+                aria-label={board.name}
+              >
+                <span className={styles.name}>{board.name}</span>
                 <span className={styles.date}>
                   Updated{" "}
                   <time dateTime={board.updatedAt}>
                     {formatDate.format(new Date(board.updatedAt))}
                   </time>
                 </span>
-              </div>
-              <Disclosure
-                label={`Actions for ${board.name}`}
-                trigger={<span aria-hidden="true">•••</span>}
-              >
-                {(close) => (
-                  <>
-                    <Button
-                      variant="ghost"
-                      aria-label={`Rename ${board.name}`}
-                      onClick={(event) => {
-                        close(event.currentTarget);
-                        setAction({ type: "rename", board });
-                      }}
-                    >
-                      Rename
-                    </Button>
-                    {board.ownerId === userId && (
+              </Link>
+              <div className={styles.boardMenu}>
+                <Disclosure
+                  label={`Actions for ${board.name}`}
+                  trigger={<span aria-hidden="true">•••</span>}
+                >
+                  {(close) => (
+                    <>
                       <Button
                         variant="ghost"
-                        aria-label={`Delete ${board.name}`}
+                        aria-label={`Rename ${board.name}`}
                         onClick={(event) => {
                           close(event.currentTarget);
-                          setAction({ type: "delete", board });
+                          setAction({ type: "rename", board });
                         }}
                       >
-                        Delete
+                        Rename
                       </Button>
-                    )}
-                  </>
-                )}
-              </Disclosure>
+                      {board.ownerId === userId && (
+                        <Button
+                          variant="ghost"
+                          aria-label={`Delete ${board.name}`}
+                          onClick={(event) => {
+                            close(event.currentTarget);
+                            setAction({ type: "delete", board });
+                          }}
+                        >
+                          Delete
+                        </Button>
+                      )}
+                    </>
+                  )}
+                </Disclosure>
+              </div>
             </li>
           ))}
         </ul>
