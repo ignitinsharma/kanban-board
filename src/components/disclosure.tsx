@@ -10,14 +10,14 @@ export function Disclosure({
 }: {
   label: string;
   trigger: ReactNode;
-  children: (close: () => void) => ReactNode;
+  children: (close: (origin: HTMLElement) => void) => ReactNode;
 }) {
   const details = useRef<HTMLDetailsElement>(null);
-  const summary = useRef<HTMLElement>(null);
 
-  function close() {
-    if (details.current) details.current.open = false;
-    summary.current?.focus();
+  function close(origin: HTMLElement) {
+    const disclosure = origin.closest("details");
+    if (disclosure) disclosure.open = false;
+    disclosure?.querySelector("summary")?.focus();
   }
 
   useEffect(() => {
@@ -37,11 +37,11 @@ export function Disclosure({
       onKeyDown={(event) => {
         if (event.key === "Escape" && details.current?.open) {
           event.stopPropagation();
-          close();
+          close(event.currentTarget);
         }
       }}
     >
-      <summary ref={summary} aria-label={label} className={styles.trigger}>
+      <summary aria-label={label} className={styles.trigger}>
         {trigger}
       </summary>
       <div className={styles.panel}>{children(close)}</div>

@@ -1,8 +1,9 @@
+import { randomInt } from "node:crypto";
 import Image from "next/image";
 import styles from "./auth.module.css";
 
 export function AuthArt() {
-  const image = Math.floor(Math.random() * 6) + 1;
+  const image = randomInt(1, 7);
 
   return (
     <aside className={styles.art}>

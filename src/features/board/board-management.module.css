@@ -48,9 +48,16 @@
   font-weight: 600;
   font-variant-numeric: tabular-nums;
 }
-.addCard {
-  width: 100%;
-  justify-content: flex-start;
+.columnTools {
+  display: flex;
+  align-items: center;
+}
+.columnTools > button {
+  min-width: var(--control-height);
+}
+.plus {
+  font-size: var(--type-lg);
+  line-height: 1;
 }
 .addColumn {
   flex: 0 0 264px;

@@ -118,12 +118,21 @@ const SortableColumn = memo(function SortableColumn({
   const sortableIds = useMemo(() => [...ids], [ids]);
   return (
     <section className={styles.column} aria-labelledby={`column-${column.id}`}>
-      <ColumnHeader
+      <AddCard
         boardId={boardId}
         actorId={actorId}
-        column={column}
-        count={ids.length}
-        total={dragEnabled ? undefined : total}
+        columnId={column.id}
+        onCreated={onCardCreated}
+        header={(action) => (
+          <ColumnHeader
+            boardId={boardId}
+            actorId={actorId}
+            column={column}
+            count={ids.length}
+            total={dragEnabled ? undefined : total}
+            action={action}
+          />
+        )}
       />
       <SortableContext
         id={column.id}
@@ -172,12 +181,6 @@ const SortableColumn = memo(function SortableColumn({
           )}
         </ul>
       </SortableContext>
-      <AddCard
-        boardId={boardId}
-        actorId={actorId}
-        columnId={column.id}
-        onCreated={onCardCreated}
-      />
     </section>
   );
 });

@@ -107,8 +107,8 @@ export function BoardsList({
                     <Button
                       variant="ghost"
                       aria-label={`Rename ${board.name}`}
-                      onClick={() => {
-                        close();
+                      onClick={(event) => {
+                        close(event.currentTarget);
                         setAction({ type: "rename", board });
                       }}
                     >
@@ -118,8 +118,8 @@ export function BoardsList({
                       <Button
                         variant="ghost"
                         aria-label={`Delete ${board.name}`}
-                        onClick={() => {
-                          close();
+                        onClick={(event) => {
+                          close(event.currentTarget);
                           setAction({ type: "delete", board });
                         }}
                       >

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { Button } from "@/components/button";
 import { Disclosure } from "@/components/disclosure";
 import { Dialog } from "@/components/dialog";
@@ -21,39 +21,54 @@ export function AddCard({
   actorId,
   columnId,
   onCreated,
-}: MutationScope & { columnId: string; onCreated: (card: Card) => void }) {
+  header,
+}: MutationScope & {
+  columnId: string;
+  onCreated: (card: Card) => void;
+  header: (action: ReactNode) => ReactNode;
+}) {
   const [open, setOpen] = useState(false);
   const add = useCreateCard({ boardId, actorId });
-  return open ? (
-    <InlineComposer
-      kind="card"
-      pending={add.isPending}
-      error={add.error?.message}
-      resetError={add.reset}
-      onClose={() => {
-        add.reset();
-        setOpen(false);
-      }}
-      onSubmit={(title) =>
-        add.mutate(
-          { title, columnId },
-          {
-            onSuccess: (result) => {
-              setOpen(false);
-              if (result.type === "card.created") onCreated(result.entity);
-            },
-          },
-        )
-      }
-    />
-  ) : (
-    <Button
-      className={styles.addCard}
-      variant="ghost"
-      onClick={() => setOpen(true)}
-    >
-      <span aria-hidden="true">+</span> Add card
-    </Button>
+  return (
+    <>
+      {header(
+        <Button
+          size="small"
+          variant="ghost"
+          title="Add card"
+          aria-label="Add card"
+          aria-expanded={open}
+          onClick={() => setOpen(true)}
+        >
+          <span className={styles.plus} aria-hidden="true">
+            +
+          </span>
+        </Button>,
+      )}
+      {open && (
+        <InlineComposer
+          kind="card"
+          pending={add.isPending}
+          error={add.error?.message}
+          resetError={add.reset}
+          onClose={() => {
+            add.reset();
+            setOpen(false);
+          }}
+          onSubmit={(title) =>
+            add.mutate(
+              { title, columnId },
+              {
+                onSuccess: (result) => {
+                  setOpen(false);
+                  if (result.type === "card.created") onCreated(result.entity);
+                },
+              },
+            )
+          }
+        />
+      )}
+    </>
   );
 }
 
@@ -97,7 +112,13 @@ export function ColumnHeader({
   column,
   count,
   total,
-}: MutationScope & { column: Column; count: number; total?: number }) {
+  action,
+}: MutationScope & {
+  column: Column;
+  count: number;
+  total?: number;
+  action: ReactNode;
+}) {
   const [mode, setMode] = useState<"rename" | "delete">();
   const rename = useRenameColumn({ boardId, actorId });
   const remove = useDeleteColumn({ boardId, actorId });
@@ -117,37 +138,40 @@ export function ColumnHeader({
             {total === undefined ? count : `${count} / ${total}`}
           </span>
         </div>
-        <Disclosure
-          label={`Actions for ${column.name}`}
-          trigger={<span aria-hidden="true">•••</span>}
-        >
-          {(close) => (
-            <>
-              <Button
-                variant="ghost"
-                aria-label={`Rename ${column.name}`}
-                onClick={() => {
-                  close();
-                  rename.reset();
-                  setMode("rename");
-                }}
-              >
-                Rename
-              </Button>
-              <Button
-                variant="ghost"
-                aria-label={`Delete ${column.name}`}
-                onClick={() => {
-                  close();
-                  remove.reset();
-                  setMode("delete");
-                }}
-              >
-                Delete
-              </Button>
-            </>
-          )}
-        </Disclosure>
+        <div className={styles.columnTools}>
+          {action}
+          <Disclosure
+            label={`Actions for ${column.name}`}
+            trigger={<span aria-hidden="true">•••</span>}
+          >
+            {(close) => (
+              <>
+                <Button
+                  variant="ghost"
+                  aria-label={`Rename ${column.name}`}
+                  onClick={(event) => {
+                    close(event.currentTarget);
+                    rename.reset();
+                    setMode("rename");
+                  }}
+                >
+                  Rename
+                </Button>
+                <Button
+                  variant="ghost"
+                  aria-label={`Delete ${column.name}`}
+                  onClick={(event) => {
+                    close(event.currentTarget);
+                    remove.reset();
+                    setMode("delete");
+                  }}
+                >
+                  Delete
+                </Button>
+              </>
+            )}
+          </Disclosure>
+        </div>
       </header>
       {mode === "rename" && (
         <InlineComposer

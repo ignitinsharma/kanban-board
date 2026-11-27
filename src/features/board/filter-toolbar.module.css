@@ -53,3 +53,18 @@
   padding: var(--space-1) var(--space-2);
   overflow-wrap: anywhere;
 }
+@media (max-width: 767px) {
+  .toolbar {
+    padding-inline: var(--space-4);
+  }
+  .controls label {
+    flex: 1 1 104px;
+    min-width: 0;
+  }
+  .controls .search {
+    flex-basis: 100%;
+  }
+  .controls select {
+    max-width: 100%;
+  }
+}
