@@ -115,6 +115,7 @@ export function AuthForm({
                 <Input
                   {...props}
                   name="password"
+                  className={styles.passwordInput}
                   type={showPassword ? "text" : "password"}
                   required
                   autoComplete={
@@ -124,11 +125,26 @@ export function AuthForm({
                 <Button
                   variant="ghost"
                   size="small"
+                  className={styles.passwordToggle}
                   aria-controls={props.id}
                   aria-label={showPassword ? "Hide password" : "Show password"}
                   onClick={() => setShowPassword(!showPassword)}
                 >
-                  {showPassword ? "Hide" : "Show"}
+                  <svg
+                    aria-hidden="true"
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6-10-6-10-6Z" />
+                    <circle cx="12" cy="12" r="2.5" />
+                    {showPassword && <path d="m4 4 16 16" />}
+                  </svg>
                 </Button>
               </div>
             )}
@@ -142,7 +158,12 @@ export function AuthForm({
                 : mutation.error.message}
             </InlineError>
           )}
-          <Button variant="primary" type="submit" loading={mutation.isPending}>
+          <Button
+            className={styles.submit}
+            variant="primary"
+            type="submit"
+            loading={mutation.isPending}
+          >
             {label}
           </Button>
         </form>

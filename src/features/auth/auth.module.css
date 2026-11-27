@@ -37,14 +37,32 @@
   margin-top: var(--space-2);
 }
 .form {
+  --auth-control-height: calc(var(--control-height) + var(--space-1));
   display: grid;
   gap: var(--space-4);
   margin-top: var(--space-6);
 }
+.form input,
+.form .submit {
+  min-height: var(--auth-control-height);
+  width: 100%;
+}
 .password {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: var(--space-2);
+  position: relative;
+}
+.password .passwordInput {
+  padding-inline-end: calc(var(--auth-control-height) + var(--space-2));
+}
+.password .passwordToggle {
+  position: absolute;
+  inset-block: 1px;
+  inset-inline-end: 1px;
+  width: calc(var(--auth-control-height) - 2px);
+  min-height: 0;
+  border-radius: calc(var(--radius-small) - 1px);
+}
+.passwordToggle:focus-visible {
+  outline-offset: -3px;
 }
 .alternate {
   margin-top: var(--space-6);
