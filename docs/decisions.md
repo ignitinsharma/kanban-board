@@ -334,3 +334,11 @@ A malformed final entry falls back to the shared bucket. Earlier entries
 may come from the caller. Outside Render both headers are ignored.
 This assumes the service receives traffic exclusively through Render’s
 public ingress. [Render’s trusted proxy guidance](https://render.com/articles/host-pocketbase-on-render)
+
+## Kanban UI design and auth photography
+
+Signed-in screens use the palette in the supplied design brief and share CSS
+tokens for controls, cards and status feedback. The system font stack keeps
+text local and avoids a font download. Sign-in and registration choose from
+six compressed [local photos](../public/auth/CREDITS.md) on the server. The
+form and its layout work independently of the artwork.

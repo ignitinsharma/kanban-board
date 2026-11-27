@@ -21,6 +21,10 @@ Live demo: [Kanban Board](https://kanban-board-wp7a.onrender.com). The first vis
 
 For keyboard drag, focus the card’s **Reorder** button. Press Space to pick up, use the arrows to move, press Space to drop, or press Escape to cancel.
 
+## UI
+
+[Sign in](docs/screenshots/login.webp) · [Boards dashboard](docs/screenshots/dashboard.webp) · [Board view](docs/screenshots/board.webp)
+
 ## Tech stack
 
 - **Next.js App Router, React, TypeScript** for pages and Node route handlers in one application.
