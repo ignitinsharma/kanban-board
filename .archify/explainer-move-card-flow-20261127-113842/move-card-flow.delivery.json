@@ -1,0 +1,84 @@
+{
+  "schemaVersion": 1,
+  "receiptId": "9ea4a7e6-8924-41f3-9942-b03a11ff36d8",
+  "status": "current",
+  "command": "deliver",
+  "type": "explainer",
+  "input": "/Users/nitinsharma/code/Github_personal/kanban-board/.archify/explainer-move-card-flow-20261127-113842/candidate.archify.md",
+  "output": "/Users/nitinsharma/code/Github_personal/kanban-board/.archify/explainer-move-card-flow-20261127-113842/move-card-flow.html",
+  "specification": {
+    "sha256": "2d261a40c94f83adadf3a26852fb860ed7c50bf76d622ec9f4206d3869cdc4a8",
+    "bytes": 5664
+  },
+  "artifact": {
+    "sha256": "7c40d4e1305ec6f3f1a2d2135cb2146f1836dfb44ca0fb756d29a4b3125813a5",
+    "bytes": 1119025
+  },
+  "explainer": {
+    "preparedSha256": "fd4835fc0174994057a4b9290c409fc05fb05beed40bb77dde681e5017dda723",
+    "dependencies": [
+      {
+        "kind": "repository",
+        "id": "route",
+        "path": "src/app/api/cards/[cardId]/move/route.ts",
+        "revision": "181bc9de85167854313cf62276dd8b5b73cb4b26",
+        "sha256": "5c0e1224370b6a9e97de3afc413f48e5134e68e9cb70397a32298cd9a236ff60",
+        "bytes": 786
+      },
+      {
+        "kind": "repository",
+        "id": "move",
+        "path": "src/features/board/move-card.ts",
+        "revision": "181bc9de85167854313cf62276dd8b5b73cb4b26",
+        "sha256": "96351ec906865b6b637d8bf2f56940847f4c987cad0eea72b8a18f889d447771",
+        "bytes": 2055
+      },
+      {
+        "kind": "repository",
+        "id": "service",
+        "path": "src/server/services/card.service.ts",
+        "revision": "181bc9de85167854313cf62276dd8b5b73cb4b26",
+        "sha256": "023fdaa537f7f3ce173439f91c90521f82ba05b1d45b038be604f6d919f81156",
+        "bytes": 7617
+      },
+      {
+        "kind": "repository",
+        "id": "bus",
+        "path": "src/server/services/board-context.ts",
+        "revision": "181bc9de85167854313cf62276dd8b5b73cb4b26",
+        "sha256": "fe66f3e22a087b04e4e8b4e5c355a752259f196d8c77fdf7d001df1879788456",
+        "bytes": 2298
+      },
+      {
+        "kind": "repository",
+        "id": "sse",
+        "path": "src/server/realtime/sse.ts",
+        "revision": "181bc9de85167854313cf62276dd8b5b73cb4b26",
+        "sha256": "ae23c3def6cc7529a54258bde6ecba7ff5cbb9c1deda52156d577ef88443fef4",
+        "bytes": 3741
+      },
+      {
+        "kind": "repository",
+        "id": "apply",
+        "path": "src/shared/apply-board-event.ts",
+        "revision": "181bc9de85167854313cf62276dd8b5b73cb4b26",
+        "sha256": "42896989d3fc98955bbb8052abc23d84be9076373581d3ba4f17503ab6c5213a",
+        "bytes": 4012
+      },
+      {
+        "kind": "diagram-spec",
+        "id": "move-arch",
+        "inline": true,
+        "sha256": "36c3134ca99cf018c1a1b9d7ef472353533b5d5db7e7f7ca3eefc36d608b4a48",
+        "bytes": 1310
+      },
+      {
+        "kind": "diagram-spec",
+        "id": "move-seq",
+        "inline": true,
+        "sha256": "146b18e4a6f910e0b0f05400f444e6d6c9444216645e8238cd64fc6b8854c2d5",
+        "bytes": 1808
+      }
+    ]
+  }
+}

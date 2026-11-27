@@ -1,0 +1,40 @@
+{
+  "schemaVersion": 1,
+  "ok": true,
+  "command": "finalize",
+  "status": "pass",
+  "type": "explainer",
+  "quality": "showcase",
+  "specification": {
+    "path": "/Users/nitinsharma/code/Github_personal/kanban-board/.archify/explainer-move-card-flow-20261127-113842/candidate.archify.md",
+    "sha256": "2d261a40c94f83adadf3a26852fb860ed7c50bf76d622ec9f4206d3869cdc4a8",
+    "bytes": 5664
+  },
+  "artifact": {
+    "path": "/Users/nitinsharma/code/Github_personal/kanban-board/.archify/explainer-move-card-flow-20261127-113842/move-card-flow.html",
+    "sha256": "7c40d4e1305ec6f3f1a2d2135cb2146f1836dfb44ca0fb756d29a4b3125813a5",
+    "bytes": 1119025
+  },
+  "gates": {
+    "validate": "pass",
+    "deliver": "pass",
+    "check": "pass",
+    "browser-check": "not-run"
+  },
+  "diagnostics": [],
+  "diagnosticSummary": {
+    "total": 0,
+    "shown": 0,
+    "truncated": false
+  },
+  "evidence": {
+    "receipt": "/Users/nitinsharma/code/Github_personal/kanban-board/.archify/explainer-move-card-flow-20261127-113842/move-card-flow.finalize.json",
+    "summaryReceipt": "/Users/nitinsharma/code/Github_personal/kanban-board/.archify/explainer-move-card-flow-20261127-113842/move-card-flow.finalize-summary.json"
+  },
+  "visualReview": "not-requested",
+  "durationMs": 1703,
+  "browserCheck": {
+    "requested": false,
+    "ran": false
+  }
+}

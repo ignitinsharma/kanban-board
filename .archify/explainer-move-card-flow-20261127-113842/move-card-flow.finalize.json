@@ -1,0 +1,543 @@
+{
+  "schemaVersion": 1,
+  "ok": true,
+  "command": "finalize",
+  "status": "pass",
+  "type": "explainer",
+  "quality": "showcase",
+  "startedAt": "2026-11-27T06:09:44.306Z",
+  "specification": {
+    "path": "/Users/nitinsharma/code/Github_personal/kanban-board/.archify/explainer-move-card-flow-20261127-113842/candidate.archify.md",
+    "sha256": "2d261a40c94f83adadf3a26852fb860ed7c50bf76d622ec9f4206d3869cdc4a8",
+    "bytes": 5664
+  },
+  "artifact": {
+    "path": "/Users/nitinsharma/code/Github_personal/kanban-board/.archify/explainer-move-card-flow-20261127-113842/move-card-flow.html",
+    "sha256": "7c40d4e1305ec6f3f1a2d2135cb2146f1836dfb44ca0fb756d29a4b3125813a5",
+    "bytes": 1119025
+  },
+  "stages": {
+    "browser-check": {
+      "status": "not-run",
+      "execution": "not-requested"
+    },
+    "validate": {
+      "status": "pass",
+      "exitCode": 0,
+      "durationMs": null,
+      "execution": "embedded-in-deliver",
+      "command": [
+        "/Users/nitinsharma/.local/share/fnm/node-versions/v24.18.0/installation/bin/node",
+        "/Users/nitinsharma/.agents/skills/archify/bin/archify.mjs",
+        "deliver",
+        "explainer",
+        "/Users/nitinsharma/code/Github_personal/kanban-board/.archify/explainer-move-card-flow-20261127-113842/candidate.archify.md",
+        "/Users/nitinsharma/code/Github_personal/kanban-board/.archify/explainer-move-card-flow-20261127-113842/move-card-flow.html",
+        "--quality",
+        "showcase",
+        "--repo-root",
+        "/Users/nitinsharma/code/Github_personal/kanban-board",
+        "--json"
+      ],
+      "receipt": {
+        "schemaVersion": 1,
+        "ok": true,
+        "command": "validate",
+        "specification": {
+          "sha256": "2d261a40c94f83adadf3a26852fb860ed7c50bf76d622ec9f4206d3869cdc4a8",
+          "bytes": 5664
+        },
+        "validation": {
+          "checksPassed": 4,
+          "checkCount": 4,
+          "compositionProfile": "showcase",
+          "compositionStatus": "pass",
+          "errors": 0,
+          "warnings": 0
+        }
+      }
+    },
+    "deliver": {
+      "status": "pass",
+      "exitCode": 0,
+      "durationMs": 907,
+      "command": [
+        "/Users/nitinsharma/.local/share/fnm/node-versions/v24.18.0/installation/bin/node",
+        "/Users/nitinsharma/.agents/skills/archify/bin/archify.mjs",
+        "deliver",
+        "explainer",
+        "/Users/nitinsharma/code/Github_personal/kanban-board/.archify/explainer-move-card-flow-20261127-113842/candidate.archify.md",
+        "/Users/nitinsharma/code/Github_personal/kanban-board/.archify/explainer-move-card-flow-20261127-113842/move-card-flow.html",
+        "--quality",
+        "showcase",
+        "--repo-root",
+        "/Users/nitinsharma/code/Github_personal/kanban-board",
+        "--json"
+      ],
+      "receipt": {
+        "schemaVersion": 1,
+        "receiptId": "9ea4a7e6-8924-41f3-9942-b03a11ff36d8",
+        "ok": true,
+        "command": "deliver",
+        "type": "explainer",
+        "input": "/Users/nitinsharma/code/Github_personal/kanban-board/.archify/explainer-move-card-flow-20261127-113842/candidate.archify.md",
+        "output": "/Users/nitinsharma/code/Github_personal/kanban-board/.archify/explainer-move-card-flow-20261127-113842/move-card-flow.html",
+        "explainer": {
+          "preparedSha256": "fd4835fc0174994057a4b9290c409fc05fb05beed40bb77dde681e5017dda723",
+          "dependencies": [
+            {
+              "kind": "repository",
+              "id": "route",
+              "path": "src/app/api/cards/[cardId]/move/route.ts",
+              "revision": "181bc9de85167854313cf62276dd8b5b73cb4b26",
+              "sha256": "5c0e1224370b6a9e97de3afc413f48e5134e68e9cb70397a32298cd9a236ff60",
+              "bytes": 786
+            },
+            {
+              "kind": "repository",
+              "id": "move",
+              "path": "src/features/board/move-card.ts",
+              "revision": "181bc9de85167854313cf62276dd8b5b73cb4b26",
+              "sha256": "96351ec906865b6b637d8bf2f56940847f4c987cad0eea72b8a18f889d447771",
+              "bytes": 2055
+            },
+            {
+              "kind": "repository",
+              "id": "service",
+              "path": "src/server/services/card.service.ts",
+              "revision": "181bc9de85167854313cf62276dd8b5b73cb4b26",
+              "sha256": "023fdaa537f7f3ce173439f91c90521f82ba05b1d45b038be604f6d919f81156",
+              "bytes": 7617
+            },
+            {
+              "kind": "repository",
+              "id": "bus",
+              "path": "src/server/services/board-context.ts",
+              "revision": "181bc9de85167854313cf62276dd8b5b73cb4b26",
+              "sha256": "fe66f3e22a087b04e4e8b4e5c355a752259f196d8c77fdf7d001df1879788456",
+              "bytes": 2298
+            },
+            {
+              "kind": "repository",
+              "id": "sse",
+              "path": "src/server/realtime/sse.ts",
+              "revision": "181bc9de85167854313cf62276dd8b5b73cb4b26",
+              "sha256": "ae23c3def6cc7529a54258bde6ecba7ff5cbb9c1deda52156d577ef88443fef4",
+              "bytes": 3741
+            },
+            {
+              "kind": "repository",
+              "id": "apply",
+              "path": "src/shared/apply-board-event.ts",
+              "revision": "181bc9de85167854313cf62276dd8b5b73cb4b26",
+              "sha256": "42896989d3fc98955bbb8052abc23d84be9076373581d3ba4f17503ab6c5213a",
+              "bytes": 4012
+            },
+            {
+              "kind": "diagram-spec",
+              "id": "move-arch",
+              "inline": true,
+              "sha256": "36c3134ca99cf018c1a1b9d7ef472353533b5d5db7e7f7ca3eefc36d608b4a48",
+              "bytes": 1310
+            },
+            {
+              "kind": "diagram-spec",
+              "id": "move-seq",
+              "inline": true,
+              "sha256": "146b18e4a6f910e0b0f05400f444e6d6c9444216645e8238cd64fc6b8854c2d5",
+              "bytes": 1808
+            }
+          ]
+        },
+        "specification": {
+          "sha256": "2d261a40c94f83adadf3a26852fb860ed7c50bf76d622ec9f4206d3869cdc4a8",
+          "bytes": 5664
+        },
+        "artifact": {
+          "sha256": "7c40d4e1305ec6f3f1a2d2135cb2146f1836dfb44ca0fb756d29a4b3125813a5",
+          "bytes": 1119025
+        },
+        "validation": {
+          "checksPassed": 4,
+          "checkCount": 4,
+          "compositionProfile": "showcase",
+          "compositionStatus": "pass",
+          "errors": 0,
+          "warnings": 0
+        },
+        "update": {
+          "status": "unavailable",
+          "installedVersion": null,
+          "availableVersion": null,
+          "releaseNotes": null,
+          "checkedAt": null,
+          "source": null,
+          "noticeRequired": false,
+          "noticeText": null,
+          "reason": "disabled"
+        }
+      }
+    },
+    "check": {
+      "status": "pass",
+      "exitCode": 0,
+      "durationMs": 634,
+      "command": [
+        "/Users/nitinsharma/.local/share/fnm/node-versions/v24.18.0/installation/bin/node",
+        "/Users/nitinsharma/.agents/skills/archify/bin/archify.mjs",
+        "check",
+        "/Users/nitinsharma/code/Github_personal/kanban-board/.archify/explainer-move-card-flow-20261127-113842/move-card-flow.html",
+        "--require-provenance"
+      ],
+      "receipt": {
+        "ok": true,
+        "file": "/Users/nitinsharma/code/Github_personal/kanban-board/.archify/explainer-move-card-flow-20261127-113842/move-card-flow.html",
+        "family": "explainer",
+        "artifact": {
+          "sha256": "7c40d4e1305ec6f3f1a2d2135cb2146f1836dfb44ca0fb756d29a4b3125813a5",
+          "bytes": 1119025
+        },
+        "checks": [
+          {
+            "name": "explainer_structure",
+            "ok": true,
+            "details": [
+              "68 unique DOM IDs"
+            ]
+          },
+          {
+            "name": "explainer_payload_identity",
+            "ok": true,
+            "details": []
+          },
+          {
+            "name": "explainer_dependencies",
+            "ok": true,
+            "details": [
+              "8 frozen dependencies"
+            ]
+          },
+          {
+            "name": "explainer_native_diagrams",
+            "ok": true,
+            "details": [
+              "move-arch: pass",
+              "move-seq: pass"
+            ]
+          }
+        ],
+        "composition": {
+          "schemaVersion": 1,
+          "profile": "showcase",
+          "status": "pass",
+          "summary": {
+            "errors": 0,
+            "warnings": 0
+          },
+          "issues": [],
+          "nativeDiagrams": [
+            {
+              "id": "move-arch",
+              "receipt": {
+                "ok": true,
+                "file": "/var/folders/9d/4j2c4wn11mj0nr363ll9w0cw0000gn/T/archify-explainer-check-v4tYKW/child.html",
+                "artifact": {
+                  "sha256": "cd1940b763313b96e718de9bcc8055116ea9db211be011317d1a7f5d463982ad",
+                  "bytes": 938769
+                },
+                "checks": [
+                  {
+                    "name": "single_svg",
+                    "ok": true,
+                    "details": [
+                      "found 1 <svg> block(s)"
+                    ]
+                  },
+                  {
+                    "name": "finite_svg",
+                    "ok": true,
+                    "details": []
+                  },
+                  {
+                    "name": "orthogonal_arrows",
+                    "ok": true,
+                    "details": []
+                  },
+                  {
+                    "name": "label_route_clearance",
+                    "ok": true,
+                    "details": []
+                  },
+                  {
+                    "name": "relationship_crossings",
+                    "ok": true,
+                    "details": []
+                  },
+                  {
+                    "name": "relationship_corridors",
+                    "ok": true,
+                    "details": []
+                  },
+                  {
+                    "name": "container_border_runs",
+                    "ok": true,
+                    "details": []
+                  },
+                  {
+                    "name": "route_rhythm",
+                    "ok": true,
+                    "details": []
+                  },
+                  {
+                    "name": "legend_clearance",
+                    "ok": true,
+                    "details": []
+                  }
+                ],
+                "composition": {
+                  "schemaVersion": 1,
+                  "profile": "showcase",
+                  "status": "pass",
+                  "summary": {
+                    "errors": 0,
+                    "warnings": 0
+                  },
+                  "metrics": {
+                    "properCrossings": 0,
+                    "resolvedCrossovers": 0,
+                    "ambiguousCorridors": 0,
+                    "arrowheadCollisions": 0,
+                    "containerBorderRuns": 0,
+                    "labelRouteClearanceIssues": 0,
+                    "labelCanvasOverflowIssues": 0,
+                    "minLabelRouteClearance": 62.8,
+                    "desktopReadabilityIssues": 0,
+                    "viewportHeightIssues": 0,
+                    "minProjectedNodeTextPx": 7.252155172413794,
+                    "maxBends": 1,
+                    "routesOverSuggestedBends": 0,
+                    "maxStretch": 1,
+                    "routesOverSuggestedStretch": 0,
+                    "minSegmentPx": 142,
+                    "minInteriorSegmentPx": null,
+                    "shortSegmentCount": 0,
+                    "shortEndpointSegmentCount": 0,
+                    "shortInteriorSegmentCount": 0,
+                    "microSegmentCount": 0
+                  },
+                  "suggestedLimits": {
+                    "bendsPerRelationship": 2,
+                    "stretch": 1.35,
+                    "segmentPx": 16,
+                    "microSegmentPx": 8
+                  },
+                  "routeReview": {
+                    "crossings": [],
+                    "detours": []
+                  },
+                  "leadingSpace": {
+                    "measured": true,
+                    "emptyTopPx": 80,
+                    "emptyTopRatio": 0.203,
+                    "occupiedTop": 80,
+                    "viewBoxTop": 0,
+                    "canvasHeight": 394,
+                    "typicalNodeHeight": 60,
+                    "reviewSuggested": false
+                  },
+                  "desktopReadability": {
+                    "budgetBasis": "recognized-declared-wide",
+                    "readerContract": "declared-wide-v1",
+                    "availableDiagramWidth": 1346,
+                    "actualBudgetPx": 1346,
+                    "actualReaderWidth": 1376,
+                    "desiredReaderWidth": 1422,
+                    "viewportCap": 1376,
+                    "limit": "viewport-cap",
+                    "requestedTargetPx": 7.5,
+                    "requestedTargetMet": false,
+                    "hardFloorPx": 6,
+                    "hardFloorMet": true,
+                    "minimumOwner": {
+                      "kind": "edge",
+                      "id": "ui-to-cache-1",
+                      "from": "ui",
+                      "to": "cache"
+                    },
+                    "minimumSourceTextPx": 10,
+                    "minimumProjectedTextPx": 7.252155172413794,
+                    "semanticTextCount": 15
+                  },
+                  "issues": []
+                }
+              }
+            },
+            {
+              "id": "move-seq",
+              "receipt": {
+                "ok": true,
+                "file": "/var/folders/9d/4j2c4wn11mj0nr363ll9w0cw0000gn/T/archify-explainer-check-72jZXF/child.html",
+                "artifact": {
+                  "sha256": "6dff345edd8f2d7123b768aadf265ab646f52ef91c959db6959f1dd4b09de876",
+                  "bytes": 937373
+                },
+                "checks": [
+                  {
+                    "name": "single_svg",
+                    "ok": true,
+                    "details": [
+                      "found 1 <svg> block(s)"
+                    ]
+                  },
+                  {
+                    "name": "finite_svg",
+                    "ok": true,
+                    "details": []
+                  },
+                  {
+                    "name": "orthogonal_arrows",
+                    "ok": true,
+                    "details": []
+                  },
+                  {
+                    "name": "label_route_clearance",
+                    "ok": true,
+                    "details": []
+                  },
+                  {
+                    "name": "relationship_crossings",
+                    "ok": true,
+                    "details": []
+                  },
+                  {
+                    "name": "relationship_corridors",
+                    "ok": true,
+                    "details": []
+                  },
+                  {
+                    "name": "container_border_runs",
+                    "ok": true,
+                    "details": []
+                  },
+                  {
+                    "name": "route_rhythm",
+                    "ok": true,
+                    "details": []
+                  },
+                  {
+                    "name": "legend_clearance",
+                    "ok": true,
+                    "details": []
+                  }
+                ],
+                "composition": {
+                  "schemaVersion": 1,
+                  "profile": "showcase",
+                  "status": "pass",
+                  "summary": {
+                    "errors": 0,
+                    "warnings": 0
+                  },
+                  "metrics": {
+                    "properCrossings": 0,
+                    "resolvedCrossovers": 0,
+                    "ambiguousCorridors": 0,
+                    "arrowheadCollisions": 0,
+                    "containerBorderRuns": 0,
+                    "labelRouteClearanceIssues": 0,
+                    "labelCanvasOverflowIssues": 0,
+                    "minLabelRouteClearance": 28,
+                    "desktopReadabilityIssues": 0,
+                    "viewportHeightIssues": 0,
+                    "minProjectedNodeTextPx": 8.690751445086706,
+                    "maxBends": 0,
+                    "routesOverSuggestedBends": 0,
+                    "maxStretch": 1,
+                    "routesOverSuggestedStretch": 0,
+                    "minSegmentPx": 106.9,
+                    "minInteriorSegmentPx": null,
+                    "shortSegmentCount": 0,
+                    "shortEndpointSegmentCount": 0,
+                    "shortInteriorSegmentCount": 0,
+                    "microSegmentCount": 0
+                  },
+                  "suggestedLimits": {
+                    "bendsPerRelationship": 2,
+                    "stretch": 1.35,
+                    "segmentPx": 16,
+                    "microSegmentPx": 8
+                  },
+                  "routeReview": {
+                    "crossings": [],
+                    "detours": []
+                  },
+                  "leadingSpace": {
+                    "measured": false,
+                    "reviewSuggested": false
+                  },
+                  "sequenceColumnSpace": {
+                    "measured": true,
+                    "columnFit": "spread",
+                    "participantCount": 8,
+                    "occupiedRight": 998,
+                    "viewBoxLeft": 0,
+                    "canvasWidth": 1038,
+                    "emptyRightPx": 40,
+                    "emptyRightRatio": 0.039,
+                    "typicalParticipantWidth": 90,
+                    "reviewSuggested": false
+                  },
+                  "desktopReadability": {
+                    "budgetBasis": "legacy-930",
+                    "readerContract": "declared-wide-v1",
+                    "availableDiagramWidth": 930,
+                    "actualBudgetPx": 930,
+                    "limit": "legacy",
+                    "requestedTargetPx": null,
+                    "requestedTargetMet": null,
+                    "hardFloorPx": 6,
+                    "hardFloorMet": true,
+                    "minimumOwner": {
+                      "kind": "node",
+                      "id": "peers"
+                    },
+                    "minimumSourceTextPx": 9.7,
+                    "minimumProjectedTextPx": 8.690751445086706,
+                    "semanticTextCount": 20
+                  },
+                  "issues": []
+                }
+              }
+            }
+          ]
+        },
+        "diagnostics": [],
+        "provenance": "current",
+        "deliveryReceiptId": "9ea4a7e6-8924-41f3-9942-b03a11ff36d8"
+      }
+    }
+  },
+  "browserCheck": {
+    "requested": false,
+    "ran": false
+  },
+  "diagnostics": [],
+  "evidence": {
+    "receipt": "/Users/nitinsharma/code/Github_personal/kanban-board/.archify/explainer-move-card-flow-20261127-113842/move-card-flow.finalize.json",
+    "summaryReceipt": "/Users/nitinsharma/code/Github_personal/kanban-board/.archify/explainer-move-card-flow-20261127-113842/move-card-flow.finalize-summary.json"
+  },
+  "visualReview": "not-requested",
+  "finishedAt": "2026-11-27T06:09:46.009Z",
+  "durationMs": 1703,
+  "update": {
+    "status": "unavailable",
+    "installedVersion": null,
+    "availableVersion": null,
+    "releaseNotes": null,
+    "checkedAt": null,
+    "source": null,
+    "noticeRequired": false,
+    "noticeText": null,
+    "reason": "timeout"
+  }
+}
