@@ -135,8 +135,10 @@ export function AuthForm({
           </FormField>
           {mutation.error && !duplicateMessage && !credentialsMessage && (
             <InlineError>
-              {retryAfter !== null
-                ? `Too many attempts. Try again in ${retryAfter} seconds.`
+              {apiError?.status === 429
+                ? retryAfter === null
+                  ? "Too many attempts. Try again shortly."
+                  : `Too many attempts. Try again in ${retryAfter} seconds.`
                 : mutation.error.message}
             </InlineError>
           )}

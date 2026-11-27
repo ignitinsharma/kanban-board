@@ -1,9 +1,12 @@
+import type { Metadata } from "next";
 import { cookies } from "next/headers";
 import { getSessionUser } from "@/server/security/auth";
 import { sessionCookieName } from "@/server/security/session-cookie";
 import { notFound, redirect } from "next/navigation";
 import { BoardView } from "@/features/board/board-view";
 import { idSchema } from "@/shared/kanban";
+
+export const metadata: Metadata = { title: "Board | Kanban" };
 
 export default async function BoardPage({
   params,

@@ -2,7 +2,7 @@
   color-scheme: light;
   --color-canvas: #f7f8f9;
   --color-surface: #ffffff;
-  --color-surface-raised: #ffffff;
+  --color-surface-raised: var(--color-surface);
   --color-subtle: #f1f2f4;
   --color-border: #dcdfe4;
   --color-control-border: #758195;
@@ -22,9 +22,14 @@
   --color-danger: #c9372c;
   --color-danger-surface: #fff0f1;
   --color-overlay: #172b4d66;
-  --priority-low: #465569;
-  --priority-medium: #284e81;
-  --priority-high: #794408;
+  --priority-low: var(--color-text-muted);
+  --priority-medium: var(--color-primary-hover);
+  --priority-high: #654500;
+  --priority-high-surface: color-mix(
+    in srgb,
+    var(--color-warning) 26%,
+    var(--color-surface)
+  );
   --priority-urgent: #982a34;
   --space-1: 4px;
   --space-2: 8px;

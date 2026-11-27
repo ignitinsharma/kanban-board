@@ -1,20 +1,23 @@
 .badge {
   display: inline-block;
   padding: 0 var(--space-2);
-  border: 1px solid currentColor;
   border-radius: var(--radius-small);
   font-size: var(--type-xs);
   font-weight: 600;
 }
 .badge[data-priority="LOW"] {
   color: var(--priority-low);
+  background: var(--color-subtle);
 }
 .badge[data-priority="MEDIUM"] {
   color: var(--priority-medium);
+  background: var(--color-selection);
 }
 .badge[data-priority="HIGH"] {
   color: var(--priority-high);
+  background: var(--priority-high-surface);
 }
 .badge[data-priority="URGENT"] {
   color: var(--priority-urgent);
+  background: var(--color-danger-surface);
 }

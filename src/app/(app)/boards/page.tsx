@@ -1,8 +1,11 @@
+import type { Metadata } from "next";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { BoardsList } from "@/features/board/boards-list";
 import { getSessionUser } from "@/server/security/auth";
 import { sessionCookieName } from "@/server/security/session-cookie";
+
+export const metadata: Metadata = { title: "Boards | Kanban" };
 
 export default async function BoardsPage({
   searchParams,
