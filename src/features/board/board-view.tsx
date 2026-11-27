@@ -13,6 +13,7 @@ import {
 import { Button } from "@/components/button";
 import { ConnectionIndicator } from "@/components/connection-indicator";
 import { EmptyState } from "@/components/empty-state";
+import { Toast } from "@/components/toast";
 import { Skeleton } from "@/components/skeleton";
 import type { Card } from "@/shared/board";
 import { ApiError, getClientId } from "@/lib/api-client";
@@ -58,24 +59,30 @@ export function BoardView({
   );
   const dragEnabled = !hasActiveFilters(filters);
   const currentFilters = useRef(filters);
-  const [hiddenCardNotice, setHiddenCardNotice] = useState(0);
+  const [notice, setNotice] = useState<{ message: string }>();
+  const announce = useCallback((message: string) => setNotice({ message }), []);
 
   useLayoutEffect(() => {
     currentFilters.current = filters;
   }, [filters]);
 
-  const onCardCreated = useCallback((card: Card) => {
-    const current = currentFilters.current;
-    if (!matchesCard(card, current, searchTerms(current.q))) {
-      setHiddenCardNotice((count) => count + 1);
-    }
-  }, []);
+  const onCardCreated = useCallback(
+    (card: Card) => {
+      const current = currentFilters.current;
+      announce(
+        matchesCard(card, current, searchTerms(current.q))
+          ? "Card created."
+          : "Card created. It is hidden by the current filters.",
+      );
+    },
+    [announce],
+  );
 
   useEffect(() => {
-    if (!hiddenCardNotice) return;
-    const timer = window.setTimeout(() => setHiddenCardNotice(0), 5000);
+    if (!notice) return;
+    const timer = window.setTimeout(() => setNotice(undefined), 5000);
     return () => window.clearTimeout(timer);
-  }, [hiddenCardNotice]);
+  }, [notice]);
   const [clientId] = useState(() =>
     typeof window === "undefined" ? "" : getClientId(),
   );
@@ -141,11 +148,7 @@ export function BoardView({
           total={filtered.counts.total}
         />
       )}
-      {!removed && Boolean(hiddenCardNotice) && (
-        <p className={styles.filterNotice} role="status">
-          Card created. It is hidden by the current filters.
-        </p>
-      )}
+      {!removed && notice && <Toast>{notice.message}</Toast>}
       {removed ? (
         <div className={styles.feedback}>
           <EmptyState title="This board is no longer available" />
@@ -202,6 +205,7 @@ export function BoardView({
           boardId={boardId}
           actorId={actorId}
           onClose={closeCard}
+          onDeleted={() => announce("Card deleted.")}
         />
       )}
       {membersOpen && (

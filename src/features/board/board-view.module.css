@@ -56,7 +56,7 @@
   padding: var(--space-3);
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
-  background: var(--color-subtle);
+  background: var(--color-column);
   gap: var(--space-3);
 }
 .cards {
@@ -77,7 +77,10 @@
   padding: var(--space-3);
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
-  background: var(--color-surface);
+  background: var(--color-card);
+  transition:
+    border-color var(--transition-fast),
+    background-color var(--transition-fast);
 }
 .cards li + li {
   margin-top: var(--space-2);
@@ -110,8 +113,11 @@
   margin-top: var(--space-2);
 }
 .emptyColumn {
-  padding: var(--space-2) var(--space-1);
+  padding: var(--space-3);
   color: var(--color-text-muted);
+  border: 1px dashed var(--color-control-border);
+  border-radius: var(--radius);
+  text-align: center;
 }
 .feedback {
   max-width: 560px;
@@ -175,10 +181,6 @@
   outline: 1px dashed var(--color-control-border);
   outline-offset: -1px;
 }
-.moveNotice {
-  flex: none;
-  padding: var(--space-2) var(--space-6) 0;
-}
 .cards {
   position: relative;
 }
@@ -195,11 +197,4 @@
 .touchPlaceholder {
   border: 1px dashed var(--color-control-border);
   border-radius: var(--radius);
-}
-.filterNotice {
-  flex: none;
-  color: var(--color-text-muted);
-  background: var(--color-surface);
-  border-bottom: 1px solid var(--color-border);
-  padding: var(--space-2) var(--space-6);
 }

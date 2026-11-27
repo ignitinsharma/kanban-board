@@ -23,7 +23,7 @@ export function AuthForm({
   art,
 }: {
   mode: "login" | "register";
-  art: ReactNode;
+  art?: ReactNode;
 }) {
   const router = useRouter();
   const registering = mode === "register";

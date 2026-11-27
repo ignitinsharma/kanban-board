@@ -152,6 +152,20 @@ export function FilterToolbar({
           <p aria-live="polite" role="status">
             {visible} of {total} cards
           </p>
+          {q && <span className={styles.chip}>Search: {q}</span>}
+          {assignee && (
+            <span className={styles.chip}>
+              {assignee === "unassigned"
+                ? "Unassigned"
+                : sortedMembers.find(({ id }) => id === assignee)?.name}
+            </span>
+          )}
+          {priority && (
+            <span className={styles.chip}>
+              {priority[0]}
+              {priority.slice(1).toLowerCase()}
+            </span>
+          )}
           <p>Clear filters to reorder cards</p>
         </div>
       )}

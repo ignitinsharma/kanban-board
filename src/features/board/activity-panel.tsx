@@ -51,12 +51,15 @@ function newestFirst(a: ActivityEntry, b: ActivityEntry) {
 
 export function ActivityPanel({
   boardId,
+  cardId,
   onClose,
 }: {
   boardId: string;
-  onClose: () => void;
+  cardId?: string;
+  onClose?: () => void;
 }) {
   const client = useQueryClient();
+  const historyList = useRef<HTMLDivElement>(null);
   const close = useRef<HTMLButtonElement>(null);
   const [now, setNow] = useState<number>();
   const [refreshError, setRefreshError] = useState(false);
@@ -163,16 +166,96 @@ export function ActivityPanel({
   }, [boardId, client]);
 
   const items =
-    activity.data?.pages.flatMap((page) => page.items).sort(newestFirst) ?? [];
+    activity.data?.pages
+      .flatMap((page) => page.items)
+      .filter((entry) => !cardId || entry.cardId === cardId)
+      .sort(newestFirst) ?? [];
 
-  return (
+  const history = (
+    <div
+      ref={historyList}
+      tabIndex={cardId ? -1 : undefined}
+      className={cardId ? undefined : styles.content}
+    >
+      {activity.isPending ? (
+        <div role="status" aria-label="Loading activity">
+          <Skeleton />
+          <Skeleton />
+        </div>
+      ) : activity.isError && !activity.data ? (
+        <>
+          <InlineError>Could not load activity.</InlineError>
+          <Button onClick={() => void activity.refetch()}>Retry</Button>
+        </>
+      ) : items.length ? (
+        <ol
+          className={styles.entries}
+          aria-label={cardId ? "Card activity" : "Board activity"}
+        >
+          {items.map((entry) => (
+            <li key={entry.id}>
+              <Avatar name={entry.actor.name} />
+              <div>
+                <p>{formatActivity(entry)}</p>
+                <time
+                  dateTime={entry.createdAt}
+                  title={new Date(entry.createdAt).toISOString()}
+                >
+                  {now === undefined ? "" : relativeTime(entry.createdAt, now)}
+                </time>
+              </div>
+            </li>
+          ))}
+        </ol>
+      ) : (
+        <p>
+          {cardId && activity.hasNextPage
+            ? "No card activity in these entries"
+            : "No activity yet"}
+        </p>
+      )}
+      {refreshError && (
+        <>
+          <InlineError>Could not refresh activity.</InlineError>
+          <Button onClick={() => refresh.current()}>Retry refresh</Button>
+        </>
+      )}
+      {activity.isFetchNextPageError && (
+        <InlineError>Could not load more activity.</InlineError>
+      )}
+      {activity.hasNextPage && (
+        <Button
+          aria-disabled={activity.isFetchingNextPage}
+          onClick={(event) => {
+            if (activity.isFetchingNextPage) return;
+            const button = event.currentTarget;
+            void activity.fetchNextPage().then((result) => {
+              if (
+                !result.hasNextPage &&
+                (document.activeElement === button ||
+                  document.activeElement === document.body)
+              ) {
+                (close.current ?? historyList.current)?.focus();
+              }
+            });
+          }}
+        >
+          {activity.isFetchNextPageError ? "Retry" : "Load more"}
+        </Button>
+      )}
+    </div>
+  );
+
+  return cardId ? (
+    history
+  ) : (
     <aside
       className={styles.panel}
       aria-labelledby="activity-heading"
       onKeyDown={(event) => {
         if (event.key === "Escape") {
           event.stopPropagation();
-          onClose();
+          onClose?.();
         }
       }}
     >
@@ -182,69 +265,7 @@ export function ActivityPanel({
           Close
         </Button>
       </header>
-      <div className={styles.content}>
-        {activity.isPending ? (
-          <div role="status" aria-label="Loading activity">
-            <Skeleton />
-            <Skeleton />
-          </div>
-        ) : activity.isError && !activity.data ? (
-          <>
-            <InlineError>Could not load activity.</InlineError>
-            <Button onClick={() => void activity.refetch()}>Retry</Button>
-          </>
-        ) : items.length ? (
-          <ol className={styles.entries} aria-label="Board activity">
-            {items.map((entry) => (
-              <li key={entry.id}>
-                <Avatar name={entry.actor.name} />
-                <div>
-                  <p>{formatActivity(entry)}</p>
-                  <time
-                    dateTime={entry.createdAt}
-                    title={new Date(entry.createdAt).toISOString()}
-                  >
-                    {now === undefined
-                      ? ""
-                      : relativeTime(entry.createdAt, now)}
-                  </time>
-                </div>
-              </li>
-            ))}
-          </ol>
-        ) : (
-          <p>No activity yet</p>
-        )}
-        {refreshError && (
-          <>
-            <InlineError>Could not refresh activity.</InlineError>
-            <Button onClick={() => refresh.current()}>Retry refresh</Button>
-          </>
-        )}
-        {activity.isFetchNextPageError && (
-          <InlineError>Could not load more activity.</InlineError>
-        )}
-        {activity.hasNextPage && (
-          <Button
-            aria-disabled={activity.isFetchingNextPage}
-            onClick={(event) => {
-              if (activity.isFetchingNextPage) return;
-              const button = event.currentTarget;
-              void activity.fetchNextPage().then((result) => {
-                if (
-                  !result.hasNextPage &&
-                  (document.activeElement === button ||
-                    document.activeElement === document.body)
-                ) {
-                  close.current?.focus();
-                }
-              });
-            }}
-          >
-            {activity.isFetchNextPageError ? "Retry" : "Load more"}
-          </Button>
-        )}
-      </div>
+      {history}
     </aside>
   );
 }

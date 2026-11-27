@@ -42,3 +42,15 @@
     margin-right: 360px;
   }
 }
+.entries li {
+  position: relative;
+  border-bottom: 0;
+}
+.entries li:not(:last-child)::before {
+  content: "";
+  position: absolute;
+  top: var(--space-10);
+  bottom: calc(-1 * var(--space-2));
+  left: 13px;
+  border-left: 1px solid var(--color-border);
+}

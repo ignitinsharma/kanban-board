@@ -29,7 +29,7 @@ import {
   useRef,
   useState,
 } from "react";
-import { InlineError } from "@/components/inline-error";
+import { Toast } from "@/components/toast";
 import { ApiError } from "@/lib/api-client";
 import type { BoardDetail, Card, Column } from "@/shared/board";
 import { boardDetailQuery } from "./board-query";
@@ -439,11 +439,7 @@ export const DragBoard = memo(function DragBoard({
 
   return (
     <>
-      {notice && (
-        <div className={styles.moveNotice}>
-          <InlineError>{notice}</InlineError>
-        </div>
-      )}
+      {notice && <Toast error>{notice}</Toast>}
       <DndContext
         key={epoch}
         sensors={dragEnabled ? sensors : noSensors}

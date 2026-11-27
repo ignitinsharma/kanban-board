@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Button } from "@/components/button";
+import { Disclosure } from "@/components/disclosure";
 import { Dialog } from "@/components/dialog";
 import { InlineError } from "@/components/inline-error";
 import type { Card, Column } from "@/shared/board";
@@ -51,7 +52,7 @@ export function AddCard({
       variant="ghost"
       onClick={() => setOpen(true)}
     >
-      Add card
+      <span aria-hidden="true">+</span> Add card
     </Button>
   );
 }
@@ -83,7 +84,7 @@ export function AddColumn({
         />
       ) : (
         <Button variant="secondary" onClick={() => setOpen(true)}>
-          Add column
+          <span aria-hidden="true">+</span> Add column
         </Button>
       )}
     </div>
@@ -116,59 +117,37 @@ export function ColumnHeader({
             {total === undefined ? count : `${count} / ${total}`}
           </span>
         </div>
-        <div className={styles.tools}>
-          <Button
-            variant="ghost"
-            className={styles.iconButton}
-            title="Rename column"
-            aria-label={`Rename ${column.name}`}
-            onClick={() => {
-              rename.reset();
-              setMode("rename");
-            }}
-          >
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 16 16"
-              fill="none"
-              aria-hidden="true"
-            >
-              <path
-                d="m10.5 3 2.5 2.5M3 13l3.2-.7 7-7a.9.9 0 0 0 0-1.3l-1.2-1.2a.9.9 0 0 0-1.3 0l-7 7L3 13Z"
-                stroke="currentColor"
-                strokeWidth="1.3"
-                strokeLinejoin="round"
-              />
-            </svg>
-          </Button>
-          <Button
-            variant="ghost"
-            className={styles.iconButton}
-            title="Delete column"
-            aria-label={`Delete ${column.name}`}
-            onClick={() => {
-              remove.reset();
-              setMode("delete");
-            }}
-          >
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 16 16"
-              fill="none"
-              aria-hidden="true"
-            >
-              <path
-                d="M2.5 4.5h11m-7.5 0V2.8h4v1.7m2.4 0-.6 8.6H4.2l-.6-8.6m3 2v4.4m2.8-4.4v4.4"
-                stroke="currentColor"
-                strokeWidth="1.3"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-          </Button>
-        </div>
+        <Disclosure
+          label={`Actions for ${column.name}`}
+          trigger={<span aria-hidden="true">•••</span>}
+        >
+          {(close) => (
+            <>
+              <Button
+                variant="ghost"
+                aria-label={`Rename ${column.name}`}
+                onClick={() => {
+                  close();
+                  rename.reset();
+                  setMode("rename");
+                }}
+              >
+                Rename
+              </Button>
+              <Button
+                variant="ghost"
+                aria-label={`Delete ${column.name}`}
+                onClick={() => {
+                  close();
+                  remove.reset();
+                  setMode("delete");
+                }}
+              >
+                Delete
+              </Button>
+            </>
+          )}
+        </Disclosure>
       </header>
       {mode === "rename" && (
         <InlineComposer

@@ -9,6 +9,7 @@ import { Input } from "@/components/input";
 import { Select } from "@/components/select";
 import { Textarea } from "@/components/textarea";
 import { cardPrioritySchema } from "@/shared/kanban";
+import { ActivityPanel } from "./activity-panel";
 import { cardDiff } from "./card-diff";
 import { useBoard } from "./board-hooks";
 import {
@@ -23,10 +24,12 @@ export function CardDetailDialog({
   boardId,
   actorId,
   onClose,
-}: MutationScope & { id: string; onClose: () => void }) {
+  onDeleted,
+}: MutationScope & { id: string; onClose: () => void; onDeleted: () => void }) {
   const { data } = useBoard(boardId, { enabled: false });
   const live = data?.cards.find((card) => card.id === id);
   const [original] = useState(live);
+  const [historyOpen, setHistoryOpen] = useState(false);
   const [confirming, setConfirming] = useState(false);
   const back = useRef<HTMLButtonElement>(null);
   const saveButton = useRef<HTMLButtonElement>(null);
@@ -199,6 +202,16 @@ export function CardDetailDialog({
               </div>
             </div>
           </form>
+          {!confirming && (
+            <details
+              className={styles.cardActivity}
+              open={historyOpen}
+              onToggle={(event) => setHistoryOpen(event.currentTarget.open)}
+            >
+              <summary>Card activity</summary>
+              {historyOpen && <ActivityPanel boardId={boardId} cardId={id} />}
+            </details>
+          )}
           {confirming && (
             <div className={styles.form}>
               <p>
@@ -221,7 +234,14 @@ export function CardDetailDialog({
                 <Button
                   variant="danger"
                   loading={remove.isPending}
-                  onClick={() => remove.mutate(id, { onSuccess: onClose })}
+                  onClick={() =>
+                    remove.mutate(id, {
+                      onSuccess: () => {
+                        onDeleted();
+                        onClose();
+                      },
+                    })
+                  }
                 >
                   Delete card
                 </Button>
