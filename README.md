@@ -6,7 +6,7 @@
 
 A collaborative Kanban board with cards, columns, members, and activity history.
 Changes appear in other open sessions through Server-Sent Events (SSE).
-Live demo: `<LIVE_URL>`. The first visit after a free-tier idle period can take about a minute.
+Live demo: [Kanban Board](https://kanban-board-wp7a.onrender.com). The first visit after a free-tier idle period can take about a minute.
 
 ## Features
 
@@ -263,25 +263,27 @@ physical-device performance were outside those runs.
 
 ## Deployment
 
-1. Create a free Neon project in AWS US West (Oregon). Use the same database
-   and role for both connection URLs. Keep the URLs in the dashboard.
-2. Connect the repository to Render using **New → Blueprint** and select
-   `main`. The Blueprint creates one free Node web service in Oregon.
-   If choosing another geography, select matching regions in both services
-   before creating the web service.
-3. Supply `DATABASE_URL` (Neon pooled), `DATABASE_URL_UNPOOLED` (Neon
-   direct), and `JWT_SECRET` (generate with `openssl rand -base64 48`).
-   The Blueprint already sets `NODE_ENV` and `NODE_VERSION`. Render provides
-   `PORT` and `RENDER`.
-4. Apply the Blueprint. The build installs dependencies including Prisma
-   CLI, generates the client, deploys migrations using the direct URL,
-   and builds Next.js. Free web services have no pre-deploy command.
-   Generation and compilation themselves need neither database URL nor
-   JWT secret. Startup needs the runtime URL and JWT secret.
-5. Once the service is healthy, run
-   `node scripts/smoke.mjs https://<service>.onrender.com`. The hosted run
-   verifies whether Render ingress delivers SSE frames incrementally.
-   Local verification does not cover that ingress.
+The live demo runs on one Free Node web service in **Render Ohio**.
+It was provisioned with the Render REST API using the settings in
+[`render.yaml`](render.yaml). The service tracks `main`, deploys on
+commit, and uses `/api/health` for its health check.
+
+The Neon project is in **AWS US East (Ohio)**. The service environment
+contains `NODE_ENV`, `NODE_VERSION`, `DATABASE_URL` (Neon pooled),
+`DATABASE_URL_UNPOOLED` (Neon direct), and `JWT_SECRET`. Render
+supplies `PORT` and `RENDER`.
+
+The build installs dependencies, generates Prisma Client, applies
+migrations using the direct URL, and builds Next.js. Render Free runs
+migrations in the build command because pre-deploy commands require a
+paid web service.
+
+The live smoke test verified HTTPS headers, session cookie flags, SSE
+frame delivery, and activity history. To run it against the deployed app:
+
+```sh
+node scripts/smoke.mjs https://kanban-board-wp7a.onrender.com
+```
 
 Postgres transactions and row locks work with Neon’s transaction pooling
 because a backend connection stays assigned for the transaction. The app
