@@ -3,7 +3,7 @@
 import { useMutation } from "@tanstack/react-query";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState, type FormEvent } from "react";
+import { useState, type FormEvent, type ReactNode } from "react";
 import { Button } from "@/components/button";
 import { FormField } from "@/components/form-field";
 import { InlineError } from "@/components/inline-error";
@@ -18,10 +18,17 @@ import {
 } from "@/shared/auth";
 import styles from "./auth.module.css";
 
-export function AuthForm({ mode }: { mode: "login" | "register" }) {
+export function AuthForm({
+  mode,
+  art,
+}: {
+  mode: "login" | "register";
+  art: ReactNode;
+}) {
   const router = useRouter();
   const registering = mode === "register";
   const label = registering ? "Create account" : "Sign in";
+  const [showPassword, setShowPassword] = useState(false);
   const [issues, setIssues] = useState<Record<string, string>>({});
   const mutation = useMutation({
     mutationFn: (body: LoginInput | RegisterInput) =>
@@ -60,8 +67,15 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
   return (
     <main className={styles.page}>
       <section className={styles.panel} aria-labelledby="auth-title">
-        <div className={styles.brand}>Kanban</div>
+        <div className={styles.brand}>
+          <span aria-hidden="true">▥</span> Kanban
+        </div>
         <h1 id="auth-title">{label}</h1>
+        <p className={styles.description}>
+          {registering
+            ? "Create an account to organize work with your team."
+            : "Sign in to get back to your boards."}
+        </p>
         <form method="post" className={styles.form} onSubmit={submit}>
           {registering && (
             <FormField id="auth-name" label="Name" error={issues.name}>
@@ -86,7 +100,7 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
                 {...props}
                 name="email"
                 type="email"
-                autoComplete="email"
+                autoComplete={registering ? "email" : "username"}
                 required
               />
             )}
@@ -97,13 +111,26 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
             error={credentialsMessage ?? issues.password}
           >
             {(props) => (
-              <Input
-                {...props}
-                name="password"
-                type="password"
-                required
-                autoComplete={registering ? "new-password" : "current-password"}
-              />
+              <div className={styles.password}>
+                <Input
+                  {...props}
+                  name="password"
+                  type={showPassword ? "text" : "password"}
+                  required
+                  autoComplete={
+                    registering ? "new-password" : "current-password"
+                  }
+                />
+                <Button
+                  variant="ghost"
+                  size="small"
+                  aria-controls={props.id}
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  {showPassword ? "Hide" : "Show"}
+                </Button>
+              </div>
             )}
           </FormField>
           {mutation.error && !duplicateMessage && !credentialsMessage && (
@@ -124,6 +151,7 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
           </Link>
         </p>
       </section>
+      {art}
     </main>
   );
 }

@@ -1,28 +1,97 @@
 .page {
   min-height: 100dvh;
   display: grid;
-  align-items: start;
+  align-items: center;
   justify-items: center;
-  padding: clamp(40px, 17vh, 144px) var(--space-4) var(--space-8);
+  background: var(--color-surface);
 }
 .panel {
-  width: min(100%, 408px);
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius);
+  width: min(100%, 464px);
   padding: var(--space-8);
 }
+.panel h1 {
+  font-size: var(--type-display);
+}
 .brand {
-  color: var(--color-accent);
-  font-weight: 600;
-  margin-bottom: var(--space-4);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--type-base);
+  font-weight: 700;
+  margin-bottom: var(--space-10);
+}
+.brand span {
+  display: grid;
+  place-items: center;
+  width: var(--control-small);
+  height: var(--control-small);
+  border-radius: var(--radius);
+  background: var(--color-accent);
+  color: var(--color-accent-text);
+}
+.description,
+.alternate {
+  color: var(--color-text-muted);
+}
+.description {
+  margin-top: var(--space-2);
 }
 .form {
   display: grid;
   gap: var(--space-4);
   margin-top: var(--space-6);
 }
+.password {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--space-2);
+}
 .alternate {
-  color: var(--color-text-muted);
   margin-top: var(--space-6);
+}
+.alternate a {
+  display: inline-flex;
+  min-height: var(--control-height);
+  align-items: center;
+}
+.art {
+  display: none;
+}
+
+@media (min-width: 1024px) {
+  .page {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .art {
+    display: flex;
+    align-items: end;
+    position: relative;
+    isolation: isolate;
+    width: 100%;
+    min-height: 100dvh;
+    align-self: stretch;
+    padding: var(--space-12);
+    background: var(--color-text);
+    color: var(--color-accent-text);
+  }
+  .art img {
+    object-fit: cover;
+  }
+  .art::after {
+    position: absolute;
+    inset: 0;
+    content: "";
+    background: linear-gradient(transparent 45%, var(--color-text));
+  }
+  .art p {
+    position: relative;
+    z-index: 1;
+    width: min(100%, 16ch);
+    padding: var(--space-4);
+    border-radius: var(--radius);
+    background: var(--color-text);
+    font-size: var(--type-display);
+    font-weight: 600;
+    line-height: 1.15;
+  }
 }
