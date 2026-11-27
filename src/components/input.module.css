@@ -17,3 +17,17 @@
 .control[aria-invalid="true"] {
   border-color: var(--color-danger);
 }
+
+.control {
+  padding-inline: var(--space-3);
+}
+.control:disabled {
+  color: var(--color-disabled);
+}
+.control[aria-invalid="true"] {
+  background: var(--color-danger-surface);
+}
+.multiline {
+  min-height: 96px;
+  resize: vertical;
+}

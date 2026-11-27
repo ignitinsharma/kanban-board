@@ -5,7 +5,7 @@
   gap: var(--space-2);
   min-height: var(--control-height);
   padding: 0 var(--space-3);
-  border: 1px solid var(--color-control-border);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-small);
   background: var(--color-surface);
   color: var(--color-text);
@@ -35,11 +35,17 @@
   border-color: var(--color-danger);
 }
 .button:not(:disabled):active,
-.primary:not(:disabled):hover,
 .danger:not(:disabled):hover {
   filter: brightness(0.88);
 }
 .button:disabled {
   opacity: 0.65;
   cursor: not-allowed;
+}
+
+.primary:not(:disabled):hover {
+  background: var(--color-primary-hover);
+}
+.button[data-size="small"] {
+  padding-inline: var(--space-2);
 }

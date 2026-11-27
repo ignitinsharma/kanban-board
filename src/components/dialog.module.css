@@ -1,11 +1,12 @@
 .dialog {
-  width: min(420px, calc(100vw - var(--space-8)));
+  width: min(520px, calc(100vw - var(--space-8)));
   max-height: calc(100dvh - var(--space-8));
   padding: var(--space-6);
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
   background: var(--color-surface-raised);
   color: var(--color-text);
+  box-shadow: var(--shadow-floating);
 }
 .dialog h2 {
   font-size: var(--type-lg);

@@ -13,7 +13,7 @@
   background: currentColor;
 }
 .indicator[data-state="open"] {
-  color: var(--color-accent);
+  color: var(--color-success);
 }
 .indicator[data-state="unauthenticated"],
 .indicator[data-state="removed"] {

@@ -1,0 +1,36 @@
+.disclosure {
+  position: relative;
+}
+.trigger {
+  min-width: var(--control-height);
+  min-height: var(--control-height);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  border-radius: var(--radius);
+  list-style: none;
+}
+.trigger::-webkit-details-marker {
+  display: none;
+}
+.trigger:hover {
+  background: var(--color-subtle);
+}
+.panel {
+  position: absolute;
+  z-index: var(--z-header);
+  inset: calc(100% + var(--space-1)) 0 auto auto;
+  display: grid;
+  gap: var(--space-1);
+  min-width: 144px;
+  width: max-content;
+  max-width: min(256px, 70vw);
+  padding: var(--space-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-floating);
+}
+.panel > button {
+  justify-content: start;
+}

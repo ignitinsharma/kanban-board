@@ -1,5 +1,5 @@
 import type { ComponentPropsWithRef } from "react";
-import styles from "./textarea.module.css";
+import styles from "./input.module.css";
 
 export function Textarea({
   className,
@@ -8,7 +8,9 @@ export function Textarea({
   return (
     <textarea
       {...props}
-      className={[styles.control, className].filter(Boolean).join(" ")}
+      className={[styles.control, styles.multiline, className]
+        .filter(Boolean)
+        .join(" ")}
     />
   );
 }

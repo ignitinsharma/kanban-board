@@ -1,5 +1,5 @@
 import type { ComponentPropsWithRef } from "react";
-import styles from "./select.module.css";
+import styles from "./input.module.css";
 
 export function Select({
   className,

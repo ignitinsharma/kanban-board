@@ -4,11 +4,13 @@ import styles from "./button.module.css";
 
 type Props = ComponentPropsWithRef<"button"> & {
   variant?: "primary" | "secondary" | "ghost" | "danger";
+  size?: "small" | "default";
   loading?: boolean;
 };
 
 export function Button({
   variant = "secondary",
+  size = "default",
   loading,
   disabled,
   className,
@@ -20,6 +22,7 @@ export function Button({
     <button
       {...props}
       type={type}
+      data-size={size}
       disabled={disabled || loading}
       aria-busy={loading || undefined}
       className={[styles.button, styles[variant], className]
