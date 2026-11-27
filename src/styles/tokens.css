@@ -1,18 +1,27 @@
 :root {
   color-scheme: light;
-  --color-canvas: #f4f6f8;
-  --color-surface: #fff;
-  --color-surface-raised: #fff;
-  --color-subtle: #e9edf2;
-  --color-border: #c9d2dc;
-  --color-control-border: #798798;
-  --color-text: #182230;
-  --color-text-muted: #4b596b;
-  --color-accent: #2356a3;
-  --color-accent-text: #fff;
-  --color-danger: #a12632;
+  --color-canvas: #f7f8f9;
+  --color-surface: #ffffff;
+  --color-surface-raised: #ffffff;
+  --color-subtle: #f1f2f4;
+  --color-border: #dcdfe4;
+  --color-control-border: #758195;
+  --color-text: #172b4d;
+  --color-text-muted: #44546f;
+  --color-accent: #0c66e4;
+  --color-accent-text: #ffffff;
+  --color-primary-hover: #0055cc;
+  --color-selection: #e9f2ff;
+  --color-focus-ring: #388bff;
+  --color-disabled: #8993a4;
+  --color-success: #1f845a;
+  --color-warning: #f5cd47;
+  --color-column: var(--color-subtle);
+  --color-card: var(--color-surface);
+  --shadow-floating: 0 4px 16px #172b4d24;
+  --color-danger: #c9372c;
   --color-danger-surface: #fff0f1;
-  --color-overlay: #18223066;
+  --color-overlay: #172b4d66;
   --priority-low: #465569;
   --priority-medium: #284e81;
   --priority-high: #794408;
@@ -26,16 +35,17 @@
   --space-8: 32px;
   --space-10: 40px;
   --space-12: 48px;
-  --radius: 6px;
-  --radius-small: 4px;
+  --radius: 8px;
+  --radius-small: 8px;
   --font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
   --type-xs: 12px;
   --type-sm: 14px;
   --type-base: 16px;
   --type-lg: 20px;
-  --type-xl: 24px;
+  --type-xl: 28px;
+  --type-display: 36px;
   --control-small: 32px;
-  --control-height: 36px;
+  --control-height: 40px;
   --top-bar-height: 60px;
   --z-header: 10;
   --z-overlay: 20;
@@ -86,7 +96,7 @@ a {
   text-underline-offset: 3px;
 }
 :where(a, button, input, textarea, select, [tabindex]):focus-visible {
-  outline: 2px solid var(--color-accent);
+  outline: 2px solid var(--color-focus-ring);
   outline-offset: 3px;
 }
 @media (prefers-reduced-motion: reduce) {

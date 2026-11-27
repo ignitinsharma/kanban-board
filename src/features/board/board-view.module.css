@@ -166,7 +166,7 @@
 .overlay {
   cursor: grabbing;
   pointer-events: none;
-  box-shadow: 0 2px 8px #18223024;
+  box-shadow: var(--shadow-floating);
 }
 .cards {
   min-height: 48px;
