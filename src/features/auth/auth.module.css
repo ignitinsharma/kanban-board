@@ -95,3 +95,12 @@
     line-height: 1.15;
   }
 }
+.account {
+  display: grid;
+  padding: var(--space-2);
+  overflow-wrap: anywhere;
+}
+.account span {
+  color: var(--color-text-muted);
+  font-size: var(--type-xs);
+}

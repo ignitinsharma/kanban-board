@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState, type FormEvent } from "react";
 import { Button } from "@/components/button";
 import { Dialog } from "@/components/dialog";
+import { Disclosure } from "@/components/disclosure";
 import { EmptyState } from "@/components/empty-state";
 import { FormField } from "@/components/form-field";
 import { InlineError } from "@/components/inline-error";
@@ -44,7 +45,7 @@ export function BoardsList({
       <div className={styles.heading}>
         <h1>Boards</h1>
         <Button variant="primary" onClick={() => setAction({ type: "create" })}>
-          Create board
+          <span aria-hidden="true">+</span> New board
         </Button>
       </div>
       {notice && (
@@ -71,7 +72,17 @@ export function BoardsList({
           action={<Button onClick={() => void boards.refetch()}>Retry</Button>}
         />
       ) : boards.data.length === 0 ? (
-        <EmptyState title="No boards yet" />
+        <EmptyState
+          title="No boards yet"
+          action={
+            <Button
+              variant="primary"
+              onClick={() => setAction({ type: "create" })}
+            >
+              Create a board
+            </Button>
+          }
+        />
       ) : (
         <ul className={styles.list}>
           {boards.data.map((board) => (
@@ -87,24 +98,37 @@ export function BoardsList({
                   </time>
                 </span>
               </div>
-              <div className={styles.actions}>
-                <Button
-                  variant="ghost"
-                  aria-label={`Rename ${board.name}`}
-                  onClick={() => setAction({ type: "rename", board })}
-                >
-                  Rename
-                </Button>
-                {board.ownerId === userId && (
-                  <Button
-                    variant="ghost"
-                    aria-label={`Delete ${board.name}`}
-                    onClick={() => setAction({ type: "delete", board })}
-                  >
-                    Delete
-                  </Button>
+              <Disclosure
+                label={`Actions for ${board.name}`}
+                trigger={<span aria-hidden="true">•••</span>}
+              >
+                {(close) => (
+                  <>
+                    <Button
+                      variant="ghost"
+                      aria-label={`Rename ${board.name}`}
+                      onClick={() => {
+                        close();
+                        setAction({ type: "rename", board });
+                      }}
+                    >
+                      Rename
+                    </Button>
+                    {board.ownerId === userId && (
+                      <Button
+                        variant="ghost"
+                        aria-label={`Delete ${board.name}`}
+                        onClick={() => {
+                          close();
+                          setAction({ type: "delete", board });
+                        }}
+                      >
+                        Delete
+                      </Button>
+                    )}
+                  </>
                 )}
-              </div>
+              </Disclosure>
             </li>
           ))}
         </ul>

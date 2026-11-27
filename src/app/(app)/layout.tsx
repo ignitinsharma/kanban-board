@@ -2,7 +2,7 @@ import Link from "next/link";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import type { ReactNode } from "react";
-import { LogoutButton } from "@/features/auth/logout-button";
+import { AccountMenu } from "@/features/auth/account-menu";
 import { getSessionUser } from "@/server/security/auth";
 import { sessionCookieName } from "@/server/security/session-cookie";
 import styles from "./shell.module.css";
@@ -36,10 +36,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
           </svg>
           Kanban
         </Link>
-        <div className={styles.account}>
-          <span className={styles.name}>{user.name}</span>
-          <LogoutButton />
-        </div>
+        <AccountMenu name={user.name} email={user.email} />
       </header>
       {children}
     </>
